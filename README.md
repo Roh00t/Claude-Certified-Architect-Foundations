@@ -71,7 +71,7 @@ git push
 
 Then in your repo: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save.**
 
-GitHub will give you a URL like `https://YOUR-USERNAME.github.io/Claude-Certified-Architect-Foundations/` within a minute or two. That's it — no CI, no build pipeline, nothing else to configure.
+GitHub will give you a URL like `https://roh00t.github.io/Claude-Certified-Architect-Foundations/` within a minute or two. That's it — no CI, no build pipeline, nothing else to configure.
 
 ## Contributing
 
