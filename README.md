@@ -6,7 +6,7 @@ My CCA-F journey
 
 This repo *is* how I'm studying. Every question, cheat sheet, and drill mode in here is what I'm personally using to prepare. If you're also going for the CCA-F, or you just want to watch someone learn something hard in public, follow along — fork it, use it, tell me what's wrong with it.
 
-**[→ Open the trainer](https://YOUR-USERNAME.github.io/YOUR-REPO/)** *(live once GitHub Pages is on — see Deploy below)*
+**[→ Open the trainer](https://roh00t.github.io/Claude-Certified-Architect-Foundations/)** *(live once GitHub Pages is on — see Deploy below)*
 
 ---
 
