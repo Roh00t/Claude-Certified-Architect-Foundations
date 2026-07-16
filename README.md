@@ -1,12 +1,10 @@
-# Claude-Certified-Architect-Foundations
-My CCA-F journey
 # CCA-F Exam Trainer
 
-**I'm sitting the Claude Certified Architect — Foundations (CCA-F) exam on Sunday, 19 July 2026, 19:00 SGT — and I'm building my study tool in public.**
+**I'm sitting the Claude Certified Architect — Foundations (CCA-F) exam on Sunday, 19 July 2026 at 19:00 SGT — and I'm building my study tool in public.**
 
 This repo *is* how I'm studying. Every question, cheat sheet, and drill mode in here is what I'm personally using to prepare. If you're also going for the CCA-F, or you just want to watch someone learn something hard in public, follow along — fork it, use it, tell me what's wrong with it.
 
-**[→ Open the trainer](https://roh00t.github.io/Claude-Certified-Architect-Foundations/)** *(live once GitHub Pages is on — see Deploy below)*
+**[→ Open the trainer](https://roh00t.github.io/Claude-Certified-Architect-Foundations/)**
 
 ---
 
@@ -19,69 +17,114 @@ I'm sharing it because:
 2. **It's useful to more than just me.** If you're prepping for the same exam, there's no reason to rebuild this from scratch.
 3. **The build itself is worth seeing.** This was built conversationally with Claude — cheat sheets extracted from the official task statements, distractor patterns reverse-engineered from the sample questions, a whole "trap taxonomy" for how the exam tricks you into the wrong answer. That process is arguably more interesting than the exam itself.
 
+## The length-bias finding
+
+While drilling, I noticed I could often pick the right answer **without reading it properly** — just by choosing the longest option. So I measured it across every question in the bank. The result was uncomfortable:
+
+| Question source | Correct answer is the longest option | Correct ÷ avg distractor length |
+|---|---|---|
+| **Anthropic's 12 official sample questions** | **12 / 12 — 100%** | 1.50× |
+| My authored questions | 44 / 48 — 92% | 2.20× |
+| My "hard mode" questions | 29 / 30 — 97% | 1.71× |
+| My hand-written practice set | 21 / 48 — 44% | 1.09× |
+| Recall bank (course material) | 479 / 600 — 80% | 2.49× |
+| *(random chance)* | *25%* | *1.00×* |
+
+Two things fell out of this:
+
+**The tell is real in the official material.** In all 12 published CCA-F sample questions, the correct answer is the longest one. That's the only official evidence that exists, and it points one direction.
+
+**But my own questions were far worse than the real thing**, and for a specific reason. Look at a real official question — 137 / 120 / 119 / 129 characters. Four substantive, competing answers; correct is longest by 11%. Now look at one of mine — 236 / 68 / 55 / 60. My correct answer was an essay and my distractors were one-line strawmen. The defect wasn't verbose correct answers; it was **lazy distractors**. Anthropic writes four real answers. I was writing one real answer and three punchlines.
+
+So I rewrote 62 questions, moving each correct answer's justification clause out of the option and into the explanation where it belongs. Across the whole 108-question judgment bank that takes the tell from **1.63× / longest 71% of the time** to **1.11× / 35%**.
+
+**The 12 official questions are left untouched, verbatim.** They're the only real calibration that exists — rewriting them would mean you're no longer practising against the actual published samples. They keep their tell at every difficulty. That's why the number is 35% and not 25%.
+
+**The honest caveat:** n=12 is a tiny sample, and questions written for a study guide are written to *teach*, so they may run more verbose than live exam items. Use length as a last-resort tiebreaker when you're stuck and out of time. Never as a strategy.
+
+## Difficulty levels
+
+The difficulty picker sits at the top of the **Mock Exam** tab and applies to every sitting, plus Full Sweep.
+
+| | Options | Hints |
+|---|---|---|
+| **Easy** | Original phrasing — correct answer usually longest (1.63×) | Domain + scenario pills shown |
+| **Medium** | Length-neutralised — correct answer no longer stands out (1.11×) | Domain + scenario pills shown |
+| **Hard** | Length-neutralised | **No domain or scenario hints** — just the scenario and four comparable answers |
+
+Difficulty changes *how obvious the correct answer is*, not which questions you get. Start on Medium. Use Easy only for first exposure to a topic — it will flatter you.
+
+## Confidence calibration
+
+After you pick an answer, rate how confident you are: **Guessing / Fairly sure / Certain**. In drill modes the explanation stays hidden until you rate — that's deliberate; committing to a confidence level before seeing the answer is the whole point.
+
+At submit you get a calibration table, and the metric that actually matters:
+
+> ⚠ **4 questions you were CERTAIN about and got wrong.**
+
+That's the most dangerous category in the entire exam. You won't flag those on exam day, because you don't know you don't know. A "Review only my mistakes" button surfaces them first, outlined in red. The report also tells you how many you guessed correctly — your score minus the lucky guesses is your real score.
+
 ## What's in the trainer
 
 | Feature | What it does |
 |---|---|
-| **Overview** | Domain weighting, the "three ideas that run through every domain," and my actual day-by-day countdown plan to 19 July |
+| **Overview** | Domain weighting, the "three ideas that run through every domain," and my day-by-day countdown plan to 19 July |
 | **Cheat Sheets** | The five exam domains condensed from the official task statements, plus a **Trap Map** — the 8 recurring ways the exam baits you into a plausible-but-wrong answer |
-| **Flashcards** | 36 cards on the facts the exam turns on, with a self-grading flip deck — misses recycle until you clear them |
-| **Mock Exam** | A **full 60-question / 120-minute mock** with exact domain weighting, question flagging, and auto-submit — the real exam format. Plus an 18-question quick sitting (timed or untimed-with-rationale), and a 12-question multi-select depth drill |
-| **Resources** | The three official source PDFs, mirrored for convenience: the full CCA-F Exam Guide, the Certification Exam Policy, and the Certification Terms & Conditions — plus links to Anthropic Academy, the API console, and the docs |
-| **Full Sweep** | Every single question in the trainer — 108 scenario-judgment questions + 12 multi-select + 600 recall questions = **720 questions** — in one continuous run with instant feedback. Your position and every miss are saved so you can stop, come back, and drill only what you got wrong |
-| **Recall Drill** | The 600-question foundational bank (from the four Anthropic Academy courses), filterable by course |
-| **AI Mode** | Generates brand-new, never-seen scenario questions on demand using the Claude API — see setup below |
+| **Flashcards** | 36 cards on the facts the exam turns on, self-graded — misses recycle until you clear them |
+| **Mock Exam** | A **full 60-question / 120-minute mock** with exact domain weighting, question flagging, and auto-submit. Plus an 18-question quick sitting, a 30-question Hard Mode, and a 12-question multi-select depth drill |
+| **Resources** | The three official source PDFs — Exam Guide, Exam Policy, Certification T&Cs |
+| **Full Sweep** | All **720 questions** in one continuous run with instant feedback. Position and misses saved — stop, come back, then drill only what you got wrong |
+| **Recall Drill** | The 600-question foundational bank, filterable by course |
+| **AI Mode** | Generates brand-new scenario questions on demand via the Claude API |
+| **Explain like I'm 5** | On any explanation, rewrites it in plain language with an everyday analogy. Works on all 720 questions (needs an API key) |
 | **Results** | Every sitting logged locally, broken down by domain, with your weakest domain called out |
 
 ## A note on what this is *not*
 
-There is no leaked or real exam content anywhere in this repo. The [Anthropic Certification Exam Policy](https://www.anthropic.com/legal) explicitly prohibits obtaining or distributing real exam questions — doing so risks disqualification and a ban from the certification program, for me and for you. Everything here is built from:
+There is no leaked or real exam content anywhere in this repo. The Anthropic Certification Exam Policy explicitly prohibits obtaining or distributing real exam questions — doing so risks disqualification and a ban from the certification program, for me and for you. Everything here is built from:
 
 - The 12 **official sample questions** published in Anthropic's public CCA-F exam guide
-- Questions **authored from the guide's task statements** (the actual domain/skill breakdown Anthropic publishes)
-- A **practice question set** I wrote myself while working through the material, styled to match the exam's format
+- Questions **authored from the guide's task statements** (the public domain/skill breakdown)
+- A **practice set** I wrote myself while working through the material
 - A 600-question recall bank covering the four public Anthropic Academy courses
 
-If you've found real exam content somewhere, please don't send it to me — I don't want it, and neither should you.
+Some questions here cover the same *concepts* as material I've encountered elsewhere, but every scenario, number, and option was written from scratch for this repo. If you've found real exam content somewhere, please don't send it to me — I don't want it, and neither should you.
 
 ## Setting up AI Mode (optional)
 
-Everything except AI Mode works the moment you open the page — no setup, no accounts, nothing installed. AI Mode is the one feature that needs a small amount of configuration, because generating new questions requires calling the Claude API directly from your browser:
+Everything except **AI Mode** and **Explain like I'm 5** works the moment you open the page — no setup, no account, nothing installed. Those two call the Claude API directly from your browser:
 
-1. Get an API key from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) (pay-as-you-go — each generated question costs a small fraction of a cent).
-2. Open the **AI mode** tab in the trainer, paste your key into the box, click **Save key**.
-3. Generate away.
+1. Get an API key from [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) (pay-as-you-go — a fraction of a cent per question).
+2. Open **AI mode**, paste your key, click **Save key**.
 
-**Where your key goes:** nowhere but your own browser (`localStorage`, scoped to this page) and `api.anthropic.com`. It is never sent to me, never logged, never committed to this repo. Don't paste your key into a commit, a screenshot, or a chat message with anyone — including me.
+**Where your key goes:** nowhere but your own browser (`localStorage`) and `api.anthropic.com`. It's never sent to me, never logged, never committed. Don't paste it into a commit, a screenshot, or a chat with anyone — including me.
 
-This design (a static site calling the Anthropic API straight from the browser) only works because Anthropic's API supports direct browser access for exactly this kind of use case. It's genuinely your key, your usage, your bill — small as it is.
+Everyone brings their own key. There's no shared key and no backend — if you skip this step, every other feature still works normally.
 
-## Deploying your own copy to GitHub Pages
+## Deploying your own copy
 
-This is a single static `index.html` file — no build step, no dependencies, no backend.
+Single static `index.html` — no build step, no dependencies, no backend.
 
 ```bash
-git clone https://github.com/roh00t/.git
-cd YOUR-REPO
-# index.html, README.md, LICENSE, and resources/ (3 PDFs) are already here
+git clone https://github.com/Roh00t/Claude-Certified-Architect-Foundations.git
+cd Claude-Certified-Architect-Foundations
+# index.html, README.md, LICENSE, and resources/ are already here
 git add .
 git commit -m "CCA-F exam trainer"
 git push
 ```
 
-Then in your repo: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save.**
-
-GitHub will give you a URL like `https://roh00t.github.io/Claude-Certified-Architect-Foundations/` within a minute or two. That's it — no CI, no build pipeline, nothing else to configure.
+Then: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save.**
 
 ## Contributing
 
-Found a question that's wrong, a rationale that's unclear, or a trap-tag that's miscategorized? Open an issue or a PR. If you're also studying for CCA-F and want to add questions you've written yourself (not real exam content — see above), I'd genuinely welcome them.
+Found a question that's wrong, a rationale that's unclear, or a distractor that's an obvious strawman? Open an issue or a PR — the strawman-distractor problem above is exactly the kind of thing I want caught. If you're also studying for CCA-F and want to add questions **you wrote yourself**, I'd genuinely welcome them.
 
 ## Follow the prep
 
-I'll be updating my sitting history and domain scores as I go. If you want to compare notes, benchmark your own prep against mine, or just heckle me if my mock scores are bad — that's the whole point of doing this in public.
+I'll be updating my sitting history and domain scores as I go. If you want to compare notes, benchmark your own prep against mine, or heckle me if my mock scores are bad — that's the whole point of doing this in public.
 
-**Exam day: Sunday, 19 July 2026, 19:00 SGT. Let's see how it goes.**
+**Exam day: Sunday, 19 July 2026, 19:00 SGT.**
 
 ---
 
