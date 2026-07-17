@@ -164,6 +164,19 @@ li{margin-bottom:6px}
 /* keyboard-shortcut hint row */
 .keys{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px;font-family:var(--mono);font-size:.62rem;color:var(--ink2);align-items:center}
 .keys kbd{font-family:var(--mono);font-size:.62rem;background:var(--card);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:var(--ink)}
+/* weakness heatmap */
+.heat{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.heat .lbl{font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-right:2px}
+.heatdot{font-family:var(--mono);font-size:.6rem;font-weight:600;padding:3px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink2);background:var(--card)}
+.heatdot.good{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.heatdot.mid{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.heatdot.bad{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.heatdot.none{opacity:.5}
+/* mid-drill confidence coaching */
+.coach{margin-top:10px;padding:9px 12px;border-radius:8px;font-size:.82rem;border:1px solid var(--amber);background:var(--amber-soft);color:var(--ink)}
+.coach.luck{border-color:var(--blue);background:var(--blue-soft)}
+/* due-for-review badge sizing */
+.pill.due{background:var(--red-soft);color:var(--red);font-weight:600}
 /* theme toggle (segmented) */
 .theme{display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:8px;overflow:hidden;margin-top:8px}
 .themebtn{font-family:var(--mono);font-size:.66rem;letter-spacing:.04em;padding:5px 9px;border:none;background:transparent;color:#A9B7CD;cursor:pointer;display:flex;align-items:center;gap:4px;border-right:1px solid rgba(255,255,255,.16)}
@@ -216,6 +229,13 @@ li{margin-bottom:6px}
     <div class="stat"><div class="l">Multi-select</div><div class="v"><span id="ct-multi2">12</span> <small>Q</small></div></div>
     <div class="stat"><div class="l">Pass mark</div><div class="v">720<small>/1000</small></div></div>
     <div class="stat"><div class="l">Full mock</div><div class="v">60<small>Q · 120min</small></div></div>
+  </div>
+
+  <div class="card" id="standing-card" style="display:none">
+    <h2>Where you stand</h2>
+    <p style="margin-bottom:10px">Rolling accuracy across your last 20 answers in each domain — updates as you drill. Grey = not yet drilled.</p>
+    <div id="standing-heat"></div>
+    <p id="standing-note" style="font-size:.84rem"></p>
   </div>
 
   <div class="card">
@@ -306,6 +326,12 @@ li{margin-bottom:6px}
 <!-- MOCK -->
 <section class="pane" id="p-mock">
   <div id="mock-setup">
+    <div class="card" id="review-card">
+      <h2>Due for review <span class="pill due" id="due-count">0</span></h2>
+      <p>Your spaced-repetition queue: questions you've missed or haven't seen in a while, resurfaced exactly when they're due. Missed questions come back tomorrow; each time you get one right it's pushed further out (3 → 7 → 14 → 30 days). Capped at 20 a session so it stays a warm-up, not a slog.</p>
+      <div class="btnrow"><button class="btn blue" id="start-review">Start review session</button></div>
+      <p id="due-empty" style="font-size:.82rem;display:none">Nothing due right now — drill some judgment questions and misses will schedule themselves here.</p>
+    </div>
     <div class="card">
       <h2>Difficulty</h2>
       <p id="diff-blurb" style="margin-bottom:10px"></p>
@@ -609,7 +635,7 @@ function trapChips(q){
 }
 
 /* Persistence */
-let MEM = {history:[], sweep:null};
+let MEM = {history:[], sweep:null, qstats:{}, rolling:{1:[],2:[],3:[],4:[],5:[]}};
 /* Standalone deployment (GitHub Pages): persistence is browser localStorage,
    scoped to this origin, on this device/browser only. Nothing leaves your machine. */
 async function loadState(){
@@ -622,10 +648,69 @@ async function loadState(){
     const s = localStorage.getItem('ccaf-sweep-v1');
     if(s) MEM.sweep = JSON.parse(s);
   }catch(e){}
-  renderResults(); swStatus();
+  loadQStats();
+  renderResults(); swStatus(); refreshPhaseB();
 }
 async function saveHist(){ try{ localStorage.setItem('ccaf-history', JSON.stringify(MEM.history)); }catch(e){} renderResults(); }
 async function saveSweep(){ try{ localStorage.setItem('ccaf-sweep-v1', JSON.stringify(MEM.sweep)); }catch(e){} }
+
+/* ===== Phase B: per-question stats + spaced repetition (Leitner) ===== */
+/* qid is a content hash of the stem, NOT an array index — survives bank reordering. */
+const SRS_DAYS=[1,3,7,14,30];   // interval by box level; misses reset to box 0 (due tomorrow)
+function loadQStats(){
+  try{ const s=localStorage.getItem('ccaf-q-stats'); if(s){ const o=JSON.parse(s)||{};
+    MEM.qstats=o.q||{}; MEM.rolling=Object.assign({1:[],2:[],3:[],4:[],5:[]}, o.roll||{}); } }catch(e){}
+}
+function saveQStats(){ try{ localStorage.setItem('ccaf-q-stats', JSON.stringify({q:MEM.qstats, roll:MEM.rolling})); }catch(e){} }
+function recordAnswer(stem, domain, correct, conf){
+  const id=hashStr(stem||''), now=Date.now();
+  const s=MEM.qstats[id]||{seen:0,right:0,wrong:0,box:0,nextDue:0,lastSeen:0,lastConf:null};
+  s.seen++; if(correct){ s.right++; s.box=Math.min(s.box+1,SRS_DAYS.length-1);} else { s.wrong++; s.box=0; }
+  s.nextDue = now + SRS_DAYS[s.box]*86400000;
+  s.lastSeen=now; s.lastConf=(conf==null?null:conf);
+  MEM.qstats[id]=s;
+  if(domain){ const r=MEM.rolling[domain]||(MEM.rolling[domain]=[]); r.push(correct?1:0); while(r.length>20) r.shift(); }
+  saveQStats();
+}
+function dueList(){
+  const now=Date.now(), out=[];
+  const scan=(arr,kind)=>arr.forEach(q=>{ const s=MEM.qstats[hashStr(q.q)]; if(s&&s.nextDue&&s.nextDue<=now) out.push({q,kind}); });
+  scan(JUDG,'j'); scan(HARD,'hard');
+  return out;
+}
+function domRolling(d){ const r=MEM.rolling[d]||[]; return r.length?r.reduce((a,b)=>a+b,0)/r.length:null; }
+function heatmapHTML(withLabel){
+  let h='<div class="heat" role="img" aria-label="Domain accuracy over recent answers">';
+  if(withLabel) h+='<span class="lbl">Rolling accuracy</span>';
+  for(const d of [1,2,3,4,5]){ const D=DOMAINS[d], acc=domRolling(d), n=(MEM.rolling[d]||[]).length;
+    let cls='heatdot', t;
+    if(acc==null){ cls+=' none'; t=`D${d} ${D.name}: not drilled yet`; }
+    else { const p=Math.round(acc*100); cls+= acc>=.8?' good':(acc>=.6?' mid':' bad'); t=`D${d} ${D.name}: ${p}% over last ${n}`; }
+    h+=`<span class="${cls}" title="${esc(t)}" aria-label="${esc(t)}">D${d} ${acc==null?'·':Math.round(acc*100)+'%'}</span>`;
+  }
+  return h+'</div>';
+}
+function refreshPhaseB(){
+  /* OVERVIEW standing card */
+  const anyData=[1,2,3,4,5].some(d=>(MEM.rolling[d]||[]).length);
+  const card=$('standing-card');
+  if(card){
+    card.style.display = anyData?'block':'none';
+    if(anyData){
+      $('standing-heat').innerHTML=heatmapHTML(false);
+      let weakest=null, wp=2;
+      for(const d of [1,2,3,4,5]){ const a=domRolling(d); if(a!=null && a<wp){wp=a; weakest=d;} }
+      $('standing-note').innerHTML = weakest!=null
+        ? `Weakest right now: <b>D${weakest} ${DOMAINS[weakest].name}</b> at ${Math.round(wp*100)}%. A focused drill or the review queue will move it fastest.`
+        : 'Keep drilling — the more answers logged, the sharper this reads.';
+    }
+  }
+  /* MOCK "due for review" count */
+  const due=dueList().length, dc=$('due-count'), sb=$('start-review'), de=$('due-empty');
+  if(dc) dc.textContent=due;
+  if(sb) sb.disabled = due===0;
+  if(de) de.style.display = due===0?'block':'none';
+}
 
 /* ============ TABS (ARIA tablist + arrow-key nav) ============ */
 (function(){
@@ -636,6 +721,7 @@ async function saveSweep(){ try{ localStorage.setItem('ccaf-sweep-v1', JSON.stri
     document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
     $('p-'+t.dataset.p).classList.add('on');
     if(focus) t.focus();
+    if(typeof refreshPhaseB==='function' && (t.dataset.p==='overview'||t.dataset.p==='mock')) refreshPhaseB();
   }
   tabs.forEach((t,i)=>{
     t.addEventListener('click',()=>activate(t,false));
@@ -753,13 +839,15 @@ function renderClock(){
 function renderMockQ(){
   const q=M.qs[M.cur], D=DOMAINS[q.d];
   const showHints = M.diff!=='hard';
-  const immediate = !M.exam;              // drill / hard-mode tabs give feedback per question
+  const immediate = !M.exam;              // drill / hard-mode / review tabs give feedback per question
   const revealed  = immediate && q.picked!==null && q.conf!==null;
+  if(revealed && !q.recorded){ recordAnswer(q.stem,q.d,q.picked===q.correct,q.conf); q.recorded=true; refreshPhaseB(); }
   let head = showHints
     ? `<span><span class="pill" style="background:${domSoft(D)};color:${domC(D)}">D${q.d} · ${D.short?D.short:D.name}</span> <span class="pill src">${esc(q.s)}</span></span>`
     : `<span><span class="pill src">HARD · no domain hint</span></span>`;
   let html=`<div class="qmeta">${head}<span>Q ${M.cur+1} / ${M.n}${q.flag?' · <span aria-hidden="true">⚑</span> flagged':''}</span></div>`;
   html+=`<div class="keys" aria-hidden="true"><kbd>A</kbd><kbd>B</kbd><kbd>C</kbd><kbd>D</kbd> pick · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> confidence · <kbd>Enter</kbd> next${M.exam?' · <kbd>F</kbd> flag':''}</div>`;
+  if(immediate) html+=heatmapHTML(true);
   html+=`<div class="qstem">${esc(q.stem)}</div>`;
   q.opts.forEach((o,i)=>{
     let cls='opt';
@@ -773,7 +861,10 @@ function renderMockQ(){
     html+=`</div></div>`;
   }
   if(revealed){
-    html+=`<div class="rationale" id="rat"><b>${q.picked===q.correct?'Correct':'Incorrect — key insight'}</b>${esc(q.why)}${trapChips(q.orig)}<button class="eli5btn" id="eli5">Explain like I'm 5</button><div id="eli5box"></div></div>`;
+    let coach='';
+    if(q.conf===3 && q.picked!==q.correct) coach=`<div class="coach">⚠ <b>Certain but wrong</b> on a D${q.d} question — these are the dangerous ones you won't flag on exam day. Slow down on ${DOMAINS[q.d].name}.</div>`;
+    else if(q.conf===1 && q.picked===q.correct) coach=`<div class="coach luck">🎲 <b>Lucky call</b> — you rated yourself "guessing" and got it. Don't bank on that; make sure ${DOMAINS[q.d].name} is real knowledge before exam day.</div>`;
+    html+=`<div class="rationale" id="rat"><b>${q.picked===q.correct?'Correct':'Incorrect — key insight'}</b>${esc(q.why)}${trapChips(q.orig)}${coach}<button class="eli5btn" id="eli5">Explain like I'm 5</button><div id="eli5box"></div></div>`;
   }
   $('qbox').innerHTML=html;
   $('qbox').querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>{
@@ -858,18 +949,23 @@ async function finishMock(){
   M.qs.forEach(q=>{perD[q.d].t++; if(q.picked===q.correct)perD[q.d].r++;});
   const cal={1:{n:0,r:0},2:{n:0,r:0},3:{n:0,r:0},0:{n:0,r:0}};
   M.qs.forEach(q=>{const k=q.conf||0; cal[k].n++; if(q.picked===q.correct)cal[k].r++;});
-  const label=(M.kind==='full'?'FULL MOCK':(M.kind==='exam18'?'Exam 18':(M.kind==='hard'?'Hard Mode':'Drill 18')))+' · '+M.diff;
+  const LBL={full:'FULL MOCK',exam18:'Exam 18',hard:'Hard Mode',review:'Review',drill:'Drill 18'};
+  const unscaled = M.kind==='hard'||M.kind==='review';
+  const label=(LBL[M.kind]||'Drill 18')+' · '+M.diff;
+  /* record any question not already captured live (exam-mode questions land here) */
+  M.qs.forEach(q=>{ if(!q.recorded){ recordAnswer(q.stem,q.d,q.picked===q.correct,q.conf); q.recorded=true; } });
   MEM.history.push({when:new Date().toISOString().slice(0,16).replace('T',' '), mode:label, right, total:M.n,
-    sc:(M.kind==='hard'?null:sc), perD, kind:(M.kind==='hard'?'hard':'mock'), diff:M.diff});
-  await saveHist();
+    sc:(unscaled?null:sc), perD, kind:(M.kind==='hard'?'hard':(M.kind==='review'?'review':'mock')), diff:M.diff});
+  await saveHist(); refreshPhaseB();
   $('mock-run').style.display='none';
   let html=`<div class="card"><h2>${label} result</h2>
     <div class="stats" style="margin-top:12px">
       <div class="stat"><div class="l">Raw</div><div class="v">${right}<small>/${M.n}</small></div></div>`;
-  if(M.kind!=='hard') html+=`<div class="stat"><div class="l">Est. scaled*</div><div class="v" style="color:${sc>=720?'var(--green)':'var(--red)'}">${sc}</div></div>
+  if(!unscaled) html+=`<div class="stat"><div class="l">Est. scaled*</div><div class="v" style="color:${sc>=720?'var(--green)':'var(--red)'}">${sc}</div></div>
       <div class="stat"><div class="l">Verdict</div><div class="v" style="font-size:1.1rem;color:${sc>=720?'var(--green)':'var(--red)'}">${sc>=720?'PASS':'BELOW 720'}</div></div>`;
   html+=`</div>`;
   if(M.kind==='hard') html+=`<p style="font-size:.8rem">Hard Mode isn't scaled — these are deliberately tougher than the average exam question, so treat it as a stress-test, not a pass/fail predictor.</p>`;
+  else if(M.kind==='review') html+=`<p style="font-size:.8rem">Review sessions aren't scaled — this is spaced repetition. Questions you got right just moved further out; the ones you missed will resurface tomorrow.</p>`;
   else html+=`<p style="font-size:.75rem">*Linear estimate (100 + 900 × raw%). Real equating isn't public — treat ±40 points as noise. Readiness = consistent ≥800 on FULL MOCK at medium or hard.</p>`;
 
   /* --- confidence calibration --- */
@@ -919,6 +1015,19 @@ $('start-full').addEventListener('click',()=>startMock('full'));
 $('start-exam').addEventListener('click',()=>startMock('exam18'));
 $('start-drill').addEventListener('click',()=>startMock('drill'));
 $('start-hard').addEventListener('click',()=>startMock('hard'));
+
+/* spaced-repetition review session — untimed drill built from due questions */
+function startReview(){
+  const due=shuffle(dueList()).slice(0,20);
+  if(!due.length){ refreshPhaseB(); return; }
+  if(M && M.timer){ clearInterval(M.timer); M.timer=null; }
+  $('qprev').onclick=null; $('qnext').onclick=null; $('qsubmit').onclick=null;
+  M={kind:'review', diff:DIFF, exam:false, n:due.length, qs:due.map(x=>mkView(x.q)), cur:0, secs:0, timer:null, done:false};
+  $('mock-setup').style.display='none'; $('mock-result').style.display='none'; $('mock-run').style.display='block';
+  $('exambar').style.display='none'; $('qflag').style.display='none'; $('qsubmit').style.display='inline-block';
+  renderMockQ();
+}
+$('start-review').addEventListener('click',startReview);
 
 /* ============ MULTI-SELECT DRILL ============ */
 $('start-multi').addEventListener('click',()=>{
@@ -1032,6 +1141,7 @@ function swDraw(){
     if(v.t==='m'){ if(v.locked)return; v.picked.has(i)?v.picked.delete(i):v.picked.add(i); swDraw(); return;}
     if(v.picked!==null)return; v.picked=i;
     const ok=i===v.correct;
+    if(v.t==='j'){ recordAnswer(v.stem, v.d, ok, null); refreshPhaseB(); }
     if(!SW.missMode){ MEM.sweep.answered++; if(ok)MEM.sweep.right++; else if(!MEM.sweep.wrong.includes(v.id)) MEM.sweep.wrong.push(v.id); }
     else if(ok){ MEM.sweep.wrong=MEM.sweep.wrong.filter(x=>x!==v.id); }
     saveSweep(); swStatus(); swDraw();
