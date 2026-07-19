@@ -138,7 +138,19 @@ td.num{font-family:var(--mono)}
 .dbar i{display:block;height:100%;background:var(--blue)}
 .warnbox{border:1px solid var(--amber);background:var(--amber-soft);border-radius:8px;padding:12px 14px;font-size:.84rem;color:var(--ink);margin-bottom:14px}
 .selrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
-select,input[type=text]{font-family:var(--mono);font-size:.82rem;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+select,input[type=text],input[type=password],input[type=date],input[type=time],input[type=datetime-local]{font-family:var(--mono);font-size:.82rem;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+/* exam-date picker + generated plan */
+.examset{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.examnote{font-size:.8rem;color:var(--ink2);flex-basis:100%;margin:0}
+.examnote.err{color:var(--red)}
+.planrow{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.planrow:last-child{border-bottom:none}
+.planrow .when{flex:0 0 132px;font-family:var(--mono);font-size:.72rem;color:var(--blue);font-weight:600;line-height:1.45;padding-top:1px}
+.planrow .what{flex:1;min-width:0}
+.planrow .what b{display:block;font-size:.9rem;margin-bottom:2px}
+.planrow .what span{font-size:.85rem;color:var(--ink2)}
+.planrow.exam{background:var(--blue-soft);border-radius:8px;padding:10px 12px;border-bottom:none}
+.planrow.exam .when{color:var(--ink)}
 ul{padding-left:20px;color:var(--ink2);font-size:.9rem}
 li{margin-bottom:6px}
 .grade{display:flex;gap:10px;margin-top:14px;justify-content:center}
@@ -220,7 +232,7 @@ li{margin-bottom:6px}
       <button class="themebtn" data-theme-set="dark" aria-pressed="false" title="Dark theme"><span aria-hidden="true">☾</span> Dark</button>
     </div>
   </div>
-  <div class="form">FORM Nº 004 · HARDENED<br><b><span id="ct-judg">220</span>-Q judgment bank</b> · <span id="ct-recall">600</span>-Q recall · <span id="ct-multi">12</span>-Q multi-select<br>Exam: Sun 19 Jul 2026, 19:00 · Pass 720/1000 · single-answer</div>
+  <div class="form">FORM Nº 004 · HARDENED<br><b><span id="ct-judg">220</span>-Q judgment bank</b> · <span id="ct-recall">600</span>-Q recall · <span id="ct-multi">12</span>-Q multi-select<br><span id="mast-exam">Exam date not set</span> · Pass 720/1000 · single-answer</div>
 </div></header>
 <div id="sr-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
@@ -272,16 +284,15 @@ li{margin-bottom:6px}
   </div>
 
   <div class="card">
-    <h2>Countdown plan → Sunday 19 July 2026, 19:00 <span id="cd-days" style="font-weight:600;color:var(--blue)"></span></h2>
-    <p style="margin-bottom:10px" id="cd-intro">The plan adapts to how far out you are: baseline first, drill your actual weak domain in the middle stretch, and taper hard the last 48 hours so you walk in fresh rather than saturated. The bullets below are framed relative to exam day (T-minus), so they never go stale.</p>
-    <ul>
-      <li><b>T-10 to T-8 (baseline week):</b> one untimed drill sitting (18Q) with no studying first — pure baseline. Read the Trap Map once. Then cheat sheets D1 + D2 → Full Sweep through the judgment bank (instant feedback), logging every miss.</li>
-      <li><b>T-8 to T-6 (build):</b> cheat sheets D3–D5 → FULL MOCK #1 (60Q/120min, exam conditions), with the trap-tag review the same day. Recall-bank sweeps + flashcards to first clear + the multi-select drill on the lighter day.</li>
-      <li><b>T-6 to T-4 (remediate):</b> the Results tab names your weakest domain from Mock #1 — spend this stretch there: re-read its cheat sheet, drill it in AI mode, clear it from the miss-bank. Then FULL MOCK #2 and compare the domain breakdown — the weak domain should have visibly closed.</li>
-      <li><b>T-3 to T-2 (prove it):</b> Miss-bank drill (Full Sweep → "Drill my misses") until it's empty or near-empty — the single highest-yield activity while real gaps remain. FULL MOCK #3: two consecutive sittings ≥800 = ready; below that, one more focused pass on the lagging domain.</li>
-      <li><b>Exam eve (T-1):</b> light only — flashcards to clear, Trap Map re-read, skim cheat sheets. No new mocks. Confirm logistics (ID, venue/online proctor setup, arrival time for the 19:00 start).</li>
-      <li><b>Exam day:</b> flashcards + Trap Map only, nothing past early afternoon. Eat properly before 19:00. Arrive early, ID ready. 2:00/question pace; flag and move at 2:30.</li>
-    </ul>
+    <h2>Countdown plan <span id="cd-title" style="font-weight:600;color:var(--ink2)"></span> <span id="cd-days" style="font-weight:600;color:var(--blue)"></span></h2>
+    <div class="examset">
+      <label for="exam-when" style="font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)">Your exam date &amp; time</label>
+      <input type="datetime-local" id="exam-when" aria-describedby="exam-note">
+      <button class="btn blue" id="exam-save">Save</button>
+      <button class="btn ghost" id="exam-clear">Clear</button>
+      <p class="examnote" id="exam-note" role="status" aria-live="polite"></p>
+    </div>
+    <div id="cd-plan"></div>
   </div>
 
   <div class="card">
@@ -1382,6 +1393,139 @@ function renderResults(){
 }
 $('res-clear').addEventListener('click',async ()=>{ if(confirm('Clear all sitting history?')){MEM.history=[]; try{localStorage.removeItem('ccaf-history');}catch(e){} renderResults();}});
 
+/* ============ EXAM DATE + GENERATED STUDY PLAN ============
+   Date-math contract (do not break):
+   · addDays uses COMPONENT arithmetic → DST-safe, handles month/year rollover
+     and leap days automatically. Never ± n*86400000 on a local Date.
+   · dayDiff normalizes both ends to UTC midnight first. UTC days are exactly
+     86400000ms (no DST in UTC), so that division is exact — the one sanctioned
+     use of the constant.
+   · toISOString() is never used here: it returns UTC, datetime-local is local
+     wall-clock. Mixing them shifts by up to a day.
+   · The stored value is the wall-clock string the user typed, not epoch ms —
+     an exam is an appointment at a venue, not an instant. */
+const EXAM_LS='ccaf-exam-v1';
+const MS_PER_UTC_DAY=86400000;
+const EXAM_MAX_AHEAD=730;                    // ~2 years: warn beyond, never hard-block
+function pad2(n){ return String(n).padStart(2,'0'); }
+function addDays(d,n){ return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n,d.getHours(),d.getMinutes(),0,0); }
+function dayDiff(a,b){
+  const ua=Date.UTC(a.getFullYear(),a.getMonth(),a.getDate());
+  const ub=Date.UTC(b.getFullYear(),b.getMonth(),b.getDate());
+  return Math.round((ub-ua)/MS_PER_UTC_DAY);
+}
+function runwayDays(now,exam){ return dayDiff(now,exam); }
+function toLocalInputValue(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function parseExamValue(v){
+  if(typeof v!=='string') return null;
+  const m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(v.trim());
+  if(!m) return null;
+  const y=+m[1],mo=+m[2],da=+m[3],h=+m[4],mi=+m[5];
+  if(mo<1||mo>12||da<1||da>31||h>23||mi>59) return null;
+  if(y<2000||y>2100) return null;                       // absurd-year guard
+  const d=new Date(y,mo-1,da,h,mi,0,0);
+  if(isNaN(d.getTime())) return null;
+  if(d.getFullYear()!==y||d.getMonth()!==mo-1||d.getDate()!==da) return null;  // rejects 31 Feb
+  return d;
+}
+function fmtExamDay(d){ return d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'}); }
+function fmtExamTime(d){ return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'}); }
+function fmtExamFull(d){ return d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})+', '+fmtExamTime(d); }
+
+/* milestone anchors, pinned backward from exam day — data, not code */
+const EXAM_PLAN=[
+  {t:10,title:'Baseline',body:'One untimed drill sitting (18Q) cold — no studying first, this is your baseline. Read the Trap Map once. Then cheat sheets D1 + D2 and a Full Sweep run through the judgment bank, logging every miss.'},
+  {t:8, title:'Build',body:'Cheat sheets D3–D5, then FULL MOCK #1 under exam conditions (60Q / 120min) with the trap-tag review the same day. Recall-bank sweeps, flashcards to first clear, and the multi-select drill fill the lighter hours.'},
+  {t:6, title:'Remediate',body:'The Results tab names your weakest domain from Mock #1 — spend this stretch there: re-read its cheat sheet, drill it in AI mode, clear it from the miss bank. Then FULL MOCK #2 and compare the domain breakdown; the weak domain should have visibly closed.'},
+  {t:3, title:'Prove it',body:'Miss-bank drill (Full Sweep → "Drill my misses") until it is empty or near-empty — the highest-yield activity while real gaps remain. Then FULL MOCK #3: two consecutive sittings ≥800 means ready; below that, one more focused pass on the lagging domain.'},
+  {t:1, title:'Exam eve',body:'Light only — flashcards to clear, Trap Map re-read, skim cheat sheets. No new mocks. Confirm logistics: ID, venue or online proctor setup, and arrival time for the {TIME} start.'},
+  {t:0, title:'Exam day',body:'Flashcards and the Trap Map only, nothing past early afternoon. Eat properly before {TIME}. Arrive early with ID ready. Hold 2:00 per question; flag and move at 2:30.'}
+];
+function buildPlan(now,exam){
+  const runway=runwayDays(now,exam);
+  if(runway<0) return {state:'past',runway,rows:[]};
+  const rows=[];
+  if(runway>12) rows.push({kind:'range',from:addDays(exam,-runway),to:addDays(exam,-11),title:'Foundations',
+    body:'Open runway — cycle the recall bank by course, work the cheat sheets end to end, and clear the flashcard deck. Repeat the cycle rather than cramming; the anchors below start the real ramp.'});
+  EXAM_PLAN.filter(a=>a.t<=runway).forEach(a=>rows.push({kind:'day',date:addDays(exam,-a.t),t:a.t,title:a.title,body:a.body}));
+  return {state:'ok',runway,rows};
+}
+
+/* ---- persistence (validated on read as well as write) ---- */
+function loadExam(){
+  let raw=null; try{ raw=localStorage.getItem(EXAM_LS); }catch(e){}
+  return parseExamValue(raw);
+}
+function saveExam(d){ try{ localStorage.setItem(EXAM_LS,toLocalInputValue(d)); }catch(e){} }
+function clearExam(){ try{ localStorage.removeItem(EXAM_LS); }catch(e){} }
+
+/* ---- render ---- */
+function renderExamPlan(){
+  const exam=loadExam(), now=new Date();
+  const plan=$('cd-plan'), title=$('cd-title'), days=$('cd-days'), mast=$('mast-exam');
+  if(!plan) return;
+  if(!exam){
+    if(title) title.textContent='';
+    if(days) days.textContent='';
+    if(mast) mast.textContent='Exam date not set';
+    plan.innerHTML=`<p>Set your exam date above and this becomes a dated plan counting back from exam day — anchors for your baseline sitting, each full mock, remediation, and the taper.</p>`;
+    return;
+  }
+  if(mast) mast.textContent='Exam: '+fmtExamFull(exam);
+  if(title) title.textContent='→ '+fmtExamFull(exam);
+  const p=buildPlan(now,exam);
+  if(p.state==='past'){
+    if(days) days.textContent='(exam has passed)';
+    plan.innerHTML=`<p>That exam date has passed — your history and review queue are all still here. Set a new date above whenever you book again.</p>`;
+    return;
+  }
+  if(days) days.textContent = p.runway>1?`(${p.runway} days out)`:(p.runway===1?'(tomorrow)':'(exam day)');
+  const time=fmtExamTime(exam);
+  let html='';
+  p.rows.forEach(r=>{
+    const body=esc(r.body.replace(/\{TIME\}/g,time));
+    if(r.kind==='range') html+=`<div class="planrow"><div class="when">${esc(fmtExamDay(r.from))} – ${esc(fmtExamDay(r.to))}</div><div class="what"><b>${esc(r.title)}</b><span>${body}</span></div></div>`;
+    else html+=`<div class="planrow${r.t===0?' exam':''}"><div class="when">${esc(fmtExamDay(r.date))}${r.t?`<br>T‑${r.t}`:'<br>EXAM'}</div><div class="what"><b>${esc(r.title)}</b><span>${body}</span></div></div>`;
+  });
+  if(p.runway<=2) html+=`<p style="margin-top:10px"><b>Short runway.</b> No new mocks — they cost more energy than they return this close. Clear the review queue, re-read the Trap Map, and protect your sleep.</p>`;
+  else html+=`<p style="margin-top:10px">These are <b>anchor days</b>, not a full timetable. Between anchors, clear your review queue and drill your weakest domain from the Results tab.</p>`;
+  plan.innerHTML=html;
+}
+
+/* ---- wire the picker ---- */
+function initExamPlan(){
+  const input=$('exam-when'), note=$('exam-note');
+  if(!input) return;
+  const now=new Date();
+  input.min=toLocalInputValue(now);                       // UX hint only — never trusted
+  input.max=toLocalInputValue(addDays(now,EXAM_MAX_AHEAD));
+  const cur=loadExam(); if(cur) input.value=toLocalInputValue(cur);
+  const say=(msg,isErr)=>{ if(note){ note.textContent=msg; note.classList.toggle('err',!!isErr); } };
+
+  $('exam-save').addEventListener('click',()=>{
+    const d=parseExamValue(input.value);
+    if(!d){ say('That does not look like a valid date and time — pick one from the calendar.',true); return; }
+    const rw=runwayDays(new Date(),d);
+    if(rw<0){
+      // show the app's idea of "now" so a skewed system clock is diagnosable
+      say(`That is in the past. This device thinks it is currently ${fmtExamFull(new Date())} — if that is wrong, fix your device clock.`,true);
+      return;
+    }
+    if(rw>EXAM_MAX_AHEAD) say(`Saved — though that is ${rw} days out, so the plan will mostly be foundations for a long while.`,false);
+    else say('Saved. Your plan is below.',false);
+    saveExam(d); renderExamPlan();
+  });
+  $('exam-clear').addEventListener('click',()=>{
+    clearExam(); input.value=''; say('Cleared.',false); renderExamPlan();
+  });
+
+  renderExamPlan();
+  /* a plan computed once at load lies by morning — recompute when the tab wakes */
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) renderExamPlan(); });
+  window.addEventListener('focus',renderExamPlan);
+  setInterval(renderExamPlan,10*60*1000);
+}
+
 /* ===== theme toggle · dynamic counts · live countdown ===== */
 (function(){
   const btns=[...document.querySelectorAll('.themebtn')];
@@ -1405,12 +1549,8 @@ $('res-clear').addEventListener('click',async ()=>{ if(confirm('Clear all sittin
     set('ct-sweep',sweep);
   }catch(e){}
 
-  /* live countdown — never goes stale */
-  try{
-    const examDay=new Date(2026,6,19), today=new Date(); today.setHours(0,0,0,0);
-    const days=Math.round((examDay-today)/86400000), el=$('cd-days');
-    if(el) el.textContent = days>1?`(${days} days out)`:(days===1?'(tomorrow)':(days===0?'(exam day)':'(exam has passed)'));
-  }catch(e){}
+  /* exam date + generated plan */
+  try{ initExamPlan(); }catch(e){}
 })();
 
 loadState();
