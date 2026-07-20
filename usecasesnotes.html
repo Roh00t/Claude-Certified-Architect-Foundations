@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Use-Case Notes — CCA-F</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  /* LIGHT (default) — surfaces align with the trainer's paper/card/ink tokens.
+     The gold accent is darkened from #c9a15a so it stays readable on white. */
+  --bg:#EEF1F5;
+  --bg2:#E4E9F1;
+  --grid:rgba(22,35,59,0.055);
+  --panel:#FFFFFF;
+  --panel-raised:#F2F5F9;
+  --border:#CBD5E3;
+  --border-soft:#DEE4EE;
+  --text:#16233B;
+  --text-dim:#4A5A74;
+  --text-faint:#6E7E9B;
+  --accent:#8A6620;
+  --accent-soft:rgba(138,102,32,0.10);
+  --accent-line:rgba(138,102,32,0.32);
+  --wrong:#B23F32;
+  --wrong-soft:rgba(178,63,50,0.08);
+  --wrong-line:rgba(178,63,50,0.30);
+  --right:#2E7D6B;
+  --right-soft:rgba(46,125,107,0.09);
+  --right-line:rgba(46,125,107,0.30);
+  --cert:#2E7D6B;
+  --likely:#8A6620;
+  --guess:#B23F32;
+  --glow:rgba(138,102,32,0.05);
+  --hero-glow:rgba(138,102,32,0.045);
+  --code-text:#6B4E14;
+  --wrong-cell-text:#7A2B21;
+  --right-cell-text:#1F5749;
+  --drawer-shadow:rgba(22,35,59,.18);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --sidebar-w:292px;
+}
+/* DARK — the original palette, applied by explicit toggle or OS preference */
+:root[data-theme="dark"]{
+  --bg:#0c1524;
+  --bg2:#0a1220;
+  --grid:rgba(148,180,214,0.055);
+  --panel:#131f34;
+  --panel-raised:#17253d;
+  --border:#233650;
+  --border-soft:#1a2b45;
+  --text:#e8edf6;
+  --text-dim:#93a7c4;
+  --text-faint:#5b7091;
+  --accent:#c9a15a;
+  --accent-soft:rgba(201,161,90,0.14);
+  --accent-line:rgba(201,161,90,0.35);
+  --wrong:#d3695c;
+  --wrong-soft:rgba(211,105,92,0.10);
+  --wrong-line:rgba(211,105,92,0.32);
+  --right:#5cab9b;
+  --right-soft:rgba(92,171,155,0.10);
+  --right-line:rgba(92,171,155,0.32);
+  --cert:#5cab9b;
+  --likely:#c9a15a;
+  --guess:#d3695c;
+  --glow:rgba(201,161,90,0.06);
+  --hero-glow:rgba(201,161,90,0.05);
+  --code-text:#f0e3c8;
+  --wrong-cell-text:#f0d3ce;
+  --right-cell-text:#cfe9e2;
+  --drawer-shadow:rgba(0,0,0,.4);
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+  --bg:#0c1524;
+  --bg2:#0a1220;
+  --grid:rgba(148,180,214,0.055);
+  --panel:#131f34;
+  --panel-raised:#17253d;
+  --border:#233650;
+  --border-soft:#1a2b45;
+  --text:#e8edf6;
+  --text-dim:#93a7c4;
+  --text-faint:#5b7091;
+  --accent:#c9a15a;
+  --accent-soft:rgba(201,161,90,0.14);
+  --accent-line:rgba(201,161,90,0.35);
+  --wrong:#d3695c;
+  --wrong-soft:rgba(211,105,92,0.10);
+  --wrong-line:rgba(211,105,92,0.32);
+  --right:#5cab9b;
+  --right-soft:rgba(92,171,155,0.10);
+  --right-line:rgba(92,171,155,0.32);
+  --cert:#5cab9b;
+  --likely:#c9a15a;
+  --guess:#d3695c;
+  --glow:rgba(201,161,90,0.06);
+  --hero-glow:rgba(201,161,90,0.05);
+  --code-text:#f0e3c8;
+  --wrong-cell-text:#f0d3ce;
+  --right-cell-text:#cfe9e2;
+  --drawer-shadow:rgba(0,0,0,.4);
+  }
+}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+@media(prefers-color-scheme:dark){html:not([data-theme="light"]){color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/48px 48px,
+    radial-gradient(ellipse 900px 500px at 15% -10%, var(--glow), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:15.5px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft);color:var(--text)}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel-raised);border:1px solid var(--border-soft);padding:.1em .42em;border-radius:4px;color:var(--code-text)}
+
+/* ---------- layout shell ---------- */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
+  background:linear-gradient(180deg,var(--bg2),var(--bg));
+  border-right:1px solid var(--border-soft);
+  overflow-y:auto;padding:26px 20px 40px;
+  z-index:40;
+}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+
+.brand{display:block;margin-bottom:4px}
+.brand .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--text-faint);text-transform:uppercase}
+.brand h1{font-family:var(--display);font-size:20px;font-weight:700;margin:4px 0 2px;letter-spacing:.01em;line-height:1.25}
+.brand .sub{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.04em}
+
+.titleblock{
+  margin:18px 0 22px;padding:12px 13px;border:1px solid var(--border);
+  border-left:3px solid var(--accent);background:var(--panel);
+  font-family:var(--mono);font-size:10.6px;color:var(--text-dim);
+}
+.titleblock div{display:flex;justify-content:space-between;padding:2px 0}
+.titleblock b{color:var(--text);font-weight:600}
+
+.crosslink{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);
+  text-decoration:none;border:1px solid var(--border);border-radius:7px;
+  padding:9px 11px;margin-bottom:22px;transition:border-color .15s,color .15s;
+}
+.crosslink:hover{border-color:var(--accent-line);color:var(--accent)}
+.crosslink .arrow{color:var(--accent)}
+
+.themeset{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:18px}
+.themeset button{flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:7px 4px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;border-right:1px solid var(--border)}
+.themeset button:last-child{border-right:none}
+.themeset button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.themeset button:hover:not(.on){color:var(--text)}
+.themeset button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.navlabel{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text-faint);text-transform:uppercase;margin:22px 0 10px}
+nav.toc{display:flex;flex-direction:column;gap:3px}
+nav.toc a{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 9px;border-radius:7px;text-decoration:none;
+  color:var(--text-dim);font-size:13px;border:1px solid transparent;
+  transition:background .15s,color .15s,border-color .15s;
+}
+nav.toc a:hover{background:var(--panel-raised);color:var(--text)}
+nav.toc a.active{background:var(--accent-soft);color:var(--text);border-color:var(--accent-line)}
+nav.toc .code{font-family:var(--mono);font-size:11px;color:var(--accent);min-width:26px;font-weight:600}
+nav.toc .meta{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint)}
+nav.toc .bar{height:3px;border-radius:2px;background:var(--border);margin-top:5px;overflow:hidden;position:relative}
+nav.toc .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:2px}
+.navitem{display:flex;flex-direction:column;gap:0}
+
+.back-top{
+  display:block;margin-top:24px;font-family:var(--mono);font-size:10.5px;
+  color:var(--text-faint);text-decoration:none;letter-spacing:.05em;
+}
+.back-top:hover{color:var(--accent)}
+
+/* ---------- main content ---------- */
+main{margin-left:var(--sidebar-w);flex:1;min-width:0}
+.hero{
+  padding:56px 54px 34px;border-bottom:1px solid var(--border-soft);
+  background:linear-gradient(180deg,var(--hero-glow),transparent 70%);
+}
+.hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
+.hero h1{font-family:var(--display);font-size:38px;font-weight:700;margin:10px 0 12px;letter-spacing:-.01em}
+.hero p{color:var(--text-dim);max-width:640px;font-size:15px}
+.hero .stamp-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.stamp{
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);
+  border:1px solid var(--border);border-radius:6px;padding:6px 10px;
+  background:var(--panel);
+}
+.stamp b{color:var(--accent);font-weight:600}
+
+.wrap{max-width:840px;padding:0 54px 120px}
+
+section.domain{padding-top:64px;border-top:1px dashed var(--border)}
+section.domain:first-of-type{border-top:none}
+
+.domain-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:6px}
+.domain-code{
+  font-family:var(--display);font-size:44px;font-weight:700;color:var(--accent);
+  line-height:1;letter-spacing:-.02em;min-width:78px;
+}
+.domain-title h2{font-family:var(--display);font-size:24px;font-weight:600;margin:2px 0 8px;letter-spacing:-.005em}
+.spec-strip{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.spec{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-faint);
+  border-left:2px solid var(--border);padding-left:8px;
+}
+.spec b{display:block;color:var(--text-dim);font-size:12.5px;margin-top:1px}
+
+.lede{color:var(--text-dim);font-size:14.8px;margin:14px 0 28px;padding:14px 16px;background:var(--panel);border:1px solid var(--border-soft);border-radius:9px}
+.lede b{color:var(--text)}
+
+h3.sec{font-family:var(--display);font-size:17px;font-weight:600;margin:34px 0 12px;color:var(--text);display:flex;align-items:center;gap:10px}
+h3.sec::before{content:'';width:16px;height:1px;background:var(--accent-line)}
+h4.sub{font-family:var(--sans);font-size:14.5px;font-weight:600;margin:20px 0 8px;color:var(--text)}
+p{margin:0 0 13px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:6px}
+strong{color:var(--text);font-weight:600}
+
+/* confidence tags */
+.tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.tag-cert{color:var(--cert);background:var(--right-soft);border:1px solid var(--right-line)}
+.tag-likely{color:var(--likely);background:var(--accent-soft);border:1px solid var(--accent-line)}
+.tag-guess{color:var(--guess);background:var(--wrong-soft);border:1px solid var(--wrong-line)}
+
+/* trap family chip */
+.chip{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-soft);padding:2px 8px;border-radius:20px;white-space:nowrap}
+
+/* callouts */
+.callout{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 9px 9px 0;padding:13px 16px;margin:18px 0;font-size:14px;color:var(--text-dim)}
+.callout b{color:var(--accent)}
+.callout.harden{border-left-color:var(--wrong)}
+.callout.harden b{color:var(--wrong)}
+.callout.verify{border-left-color:var(--right)}
+.callout.verify b{color:var(--right)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:16px 0 22px;border:1px solid var(--border);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13.3px}
+table caption{caption-side:top;text-align:left;font-family:var(--mono);font-size:11px;color:var(--text-faint);padding:10px 14px;letter-spacing:.03em}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);text-align:left;padding:10px 13px;background:var(--panel-raised);border-bottom:1px solid var(--border)}
+td{padding:11px 13px;border-bottom:1px solid var(--border-soft);vertical-align:top;color:var(--text-dim)}
+tr:last-child td{border-bottom:none}
+td.wrong-cell{background:var(--wrong-soft);color:var(--wrong-cell-text);border-left:2px solid var(--wrong-line)}
+td.right-cell{background:var(--right-soft);color:var(--right-cell-text);border-left:2px solid var(--right-line)}
+td.where-cell{font-family:var(--mono);font-size:11.5px;color:var(--text-faint)}
+
+/* quick reference box */
+.qref{margin:30px 0 10px;border:1px solid var(--accent-line);border-radius:11px;background:linear-gradient(180deg,var(--accent-soft),transparent);padding:18px 20px}
+.qref .qref-h{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.qref ul{margin:0;padding-left:0;list-style:none}
+.qref li{position:relative;padding-left:20px;margin-bottom:9px;color:var(--text-dim);font-size:13.6px}
+.qref li::before{content:'▸';position:relative;color:var(--accent);position:absolute;left:0;top:0}
+
+footer.page-end{padding:50px 54px 90px;color:var(--text-faint);font-family:var(--mono);font-size:11px;border-top:1px dashed var(--border);margin-top:20px}
+
+/* mobile */
+.menu-toggle{display:none}
+@media (max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:20px 0 40px var(--drawer-shadow)}
+  .sidebar.open{transform:translateX(0)}
+  main{margin-left:0}
+  .hero{padding:50px 22px 26px}
+  .wrap{padding:0 22px 90px}
+  .menu-toggle{
+    display:flex;position:fixed;top:16px;left:16px;z-index:50;
+    width:42px;height:42px;border-radius:9px;background:var(--panel-raised);
+    border:1px solid var(--border);align-items:center;justify-content:center;
+    cursor:pointer;color:var(--accent);font-family:var(--mono);
+  }
+  .scrim{display:none;position:fixed;inset:0;background:rgba(5,9,16,.55);z-index:39}
+  .scrim.show{display:block}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sidebar{transition:none}}
+</style>
+<script>
+/* Apply the trainer's saved theme before first paint (shared 'ccaf-theme' key,
+   same origin as index.html). Runs in <head> so there is no flash of the wrong
+   palette. Wrapped in try/catch: private mode must degrade, not break. */
+(function(){try{var m=localStorage.getItem('ccaf-theme')||'system';
+if(m==='light')document.documentElement.setAttribute('data-theme','light');
+else if(m==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
+</script>
+</head>
+<body>
+<div class="menu-toggle" aria-label="Toggle menu">☰</div>
+<div class="scrim"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="kicker">CCA-F Exam Prep</span>
+      <h1>Use-Case Notes</h1>
+      <span class="sub">6 scenarios · 4 drawn per sitting</span>
+    </div>
+    <div class="titleblock">
+      <div><span>EXAM</span><b>CCA-F</b></div>
+      <div><span>DRAWN</span><b>4 / 6 SCENARIOS</b></div>
+      <div><span>PASS MARK</span><b>720 / 1000</b></div>
+      <div><span>REV</span><b>JUL 2026</b></div>
+    </div>
+    <a class="crosslink" href="domainnotes.html"><span class="arrow">↳</span> Domain Notes</a>
+    <div class="themeset" role="group" aria-label="Color theme">
+      <button type="button" data-theme-set="light" aria-pressed="false">LIGHT</button>
+      <button type="button" data-theme-set="system" aria-pressed="false">SYSTEM</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">DARK</button>
+    </div>
+    <div class="navlabel">On this page</div>
+    <nav class="toc">
+      
+        <div class="navitem">
+          <a href="#uc1">
+            <span class="code">UC1</span>
+            <span>Support Agent</span>
+            <span class="meta">grounded</span>
+          </a>
+          
+        </div>
+        <div class="navitem">
+          <a href="#uc2">
+            <span class="code">UC2</span>
+            <span>Multi-Agent Research</span>
+            <span class="meta">grounded</span>
+          </a>
+          
+        </div>
+        <div class="navitem">
+          <a href="#uc3">
+            <span class="code">UC3</span>
+            <span>Code Generation</span>
+            <span class="meta">verify</span>
+          </a>
+          
+        </div>
+        <div class="navitem">
+          <a href="#uc4">
+            <span class="code">UC4</span>
+            <span>Developer Productivity</span>
+            <span class="meta">verify</span>
+          </a>
+          
+        </div>
+        <div class="navitem">
+          <a href="#uc5">
+            <span class="code">UC5</span>
+            <span>CI/CD</span>
+            <span class="meta">verify</span>
+          </a>
+          
+        </div>
+        <div class="navitem">
+          <a href="#uc6">
+            <span class="code">UC6</span>
+            <span>Data Extraction</span>
+            <span class="meta">verify</span>
+          </a>
+          
+        </div>
+    </nav>
+    <a class="back-top" href="index.html">← Back to Exam Trainer</a>
+  </aside>
+  <main>
+    <div class="hero">
+      <span class="eyebrow">Reference · Use Cases</span>
+      <h1>The 6 use-case scenarios, cross-domain</h1>
+      <p>Each scenario cuts across all 5 domains — this is where cross-domain synthesis actually gets tested. Support Agent and Multi-Agent Research are grounded in your own trainer's authored questions; the other four are synthesized and flagged for verification.</p>
+      <div class="stamp-row"><div class="stamp">4 of 6 drawn</div><div class="stamp">UC1 &amp; UC2 <b>grounded</b></div><div class="stamp">UC3&ndash;6 <b>verify</b></div></div>
+    </div>
+    <div class="wrap">
+      
+<section class="domain" id="uc1">
+  <div class="domain-head">
+    <div class="domain-code">UC1</div>
+    <div class="domain-title"><h2>Customer / Support Agent</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Single agent, narrow cross-role tools</b></div><div class="spec"><span>LEANS ON</span><b>D2 tool errors · D5 reliability</b></div><div class="spec"><span>GROUNDING</span><b>Your own trainer's authored bank</b></div></div>
+  <div class="lede"><span class="tag tag-cert">Cert</span>/<span class="tag tag-likely">Likely</span> grounded in your own trainer's authored question bank — patterns recovered and paraphrased, not reproduced as A/B/C/D items.</div>
+  <p>An agent (often single-agent, sometimes with a narrow set of cross-role tools) handling customer-facing conversations — order lookups, refunds, disputes, complaints — where the stakes are real money, real customer trust, and a human escalation path that has to actually work when it's needed. This is where D2 (tool errors) and D5 (reliability/context) show up most concretely.</p><h3 class="sec">D1 — Orchestration</h3><ul>
+      <li><strong>Multi-issue messages</strong> (damaged item + duplicate charge + wrong address, one message) should be <strong>decomposed into distinct items, investigated with shared context, and synthesized into one unified resolution.</strong> Traps: answering only the first issue and deferring the rest (BURDEN-SHIFT), escalating just because the message has multiple parts (DISPROPORTIONATE), handling everything in one undifferentiated pass (risks quietly dropping a sub-issue).</li>
+      <li><strong>Escalation calibration</strong>: an agent that escalates straightforward cases while attempting complex policy-exceptions autonomously has an unclear-decision-boundary problem. Fix: <strong>explicit escalation criteria plus worked examples</strong> — not a self-reported confidence score (circular — an already-miscalibrated agent miscalibrates its own confidence too), not a separately trained classifier (over-engineered).</li>
+      <li><strong>Human handoff</strong> with no transcript access needs a <strong>structured summary</strong> — customer ID, root-cause analysis, disputed/refund amount, recommended action. Not the raw reasoning chain (unreadable), not a vague "too complex for AI" note (forces the human to start from zero).</li>
+    </ul><h3 class="sec">D2 — Tool design</h3><p>An agent calling <code>get_customer</code> when the user really wants <code>lookup_order</code> is a description problem, not a data problem — fix by enriching both descriptions with input formats, example queries, and explicit boundaries. Not a routing/keyword layer, not a bigger few-shot block.</p>
+    <p><strong>Structured tool errors matter most here</strong>: an agent getting "Operation failed" for everything will retry a policy-violation error pointlessly <em>and</em> give up on a transient timeout it should have retried. This is where the abstract D2 rule has the most obviously bad real-world consequence if skipped.</p><h3 class="sec">D3 — Claude Code / configuration</h3><p>Less central here than in Developer Productivity or CI/CD, but standing policy that must always apply (refund caps, required identity verification) belongs in a hook, not a system prompt — a support agent operates on real financial actions where occasional probabilistic failure is unacceptable.</p><h3 class="sec">D4 — Prompting</h3><p>The escalation-criteria fix above is a direct D4 technique (specificity + examples) applied to a D1-shaped problem — illustrates why these use-case questions need cross-domain thinking. Watch for PROMPT-HOPE bait: "add a stronger system-prompt line telling the agent never to approve refunds over $500" when the stem's stakes are exactly the cue the real answer is a hook.</p><h3 class="sec">D5 — Context and reliability</h3><p><strong>The signature D5 pattern here:</strong> long multi-issue sessions get progressively summarized, and exact amounts/dates/order numbers erode into vague language ("a recent order, roughly $200") — producing wrong refund figures. Fix: a <strong>persistent case-facts block</strong> (amounts, dates, order numbers, statuses) that sits outside the summarized history and is included verbatim every prompt. Wrong answers: never summarizing at all (exhausts context), summarizing more aggressively (makes drift worse), repeatedly asking the customer to restate numbers (erodes trust, gets summarized away again anyway).</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">BURDEN-SHIFT</span> "ask the customer to resend issues one at a time," "ask the customer to confirm the AI's own uncertain output."</li>
+      <li><span class="chip">DISPROPORTIONATE</span> escalate every multi-part message; terminate the session on any ambiguity.</li>
+      <li><span class="chip">SILENT SUPPRESSION</span> quietly dropping one issue from a multi-issue message; letting summarization erode a dollar figure without flagging it.</li>
+      <li><span class="chip">PROMPT-HOPE</span> financial/compliance stakes answered with a system-prompt instruction instead of a hook.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>Multi-issue input → decompose, shared context, unified synthesis.</li><li>Escalation drift → explicit criteria + examples, not self-reported confidence or a new classifier.</li><li>Handoff to a human with no transcript → structured summary (ID, root cause, amount, recommendation).</li><li>Generic "Operation failed" → structured error shape (category/retryable/human-readable).</li><li>Numbers eroding over a long session → persistent case-facts block outside the summarized history.</li><li>Financial/compliance "must never" language → hook, not a prompt line.</li></ul></div>
+</section>
+<section class="domain" id="uc2">
+  <div class="domain-head">
+    <div class="domain-code">UC2</div>
+    <div class="domain-title"><h2>Multi-Agent Research</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Coordinator + specialized subagents</b></div><div class="spec"><span>LEANS ON</span><b>D1 orchestration · D2 scoping · D5 aggregation</b></div><div class="spec"><span>GROUNDING</span><b>Your own trainer's authored bank</b></div></div>
+  <div class="lede"><span class="tag tag-cert">Cert</span>/<span class="tag tag-likely">Likely</span> grounded in your own trainer's authored question bank — patterns recovered and paraphrased, not reproduced as A/B/C/D items.</div>
+  <p>A coordinator agent dispatching specialized subagents (web-search, analysis, synthesis) to investigate a topic and produce a combined report. D1's home turf almost by definition — coordinator/subagent architecture, parallelism, isolation — but pulls D2 and D5 in hard too.</p><h3 class="sec">D1 — Orchestration (the core of this use case)</h3><ul>
+      <li><strong>Error propagation from a failing subagent</strong>: when a web-search subagent times out, the coordinator needs <strong>structured error context</strong> — failure type, attempted query, partial results, potential alternatives — so it can retry modified, route around, or proceed with partial results. Traps: retrying silently and returning generic "search unavailable" (hides context needed to decide), catching the timeout and returning an <strong>empty result marked successful</strong> (SILENT SUPPRESSION), propagating to a handler that <strong>terminates the entire workflow</strong> (DISPROPORTIONATE).</li>
+      <li><strong>Subagent isolation is load-bearing</strong>: each subagent gets a fresh context window, returns only its final message. A synthesis agent doesn't automatically "know" what a search subagent found unless explicitly passed forward.</li>
+      <li><strong>Parallel dispatch</strong>: independent research subtasks should be spawned as multiple calls in a single coordinator turn, not chained sequentially.</li>
+    </ul><h3 class="sec">D2 — Tool design in a multi-agent context</h3><p><strong>Cross-role tool scoping</strong>: when 85% of a synthesis agent's verifications are simple fact-checks and 15% need deep investigation, routing everything back through the coordinator adds unnecessary round trips. Right fix: a <strong>scoped verification tool given directly to the synthesis agent</strong> for the simple case, complex verifications still go through the coordinator — least-privilege scoping. Traps: <strong>full web search access</strong> to the synthesis agent (over-provisions), batching all verifications to the end of a pass (blocking dependencies), speculative caching around every source (can't predict needs).</p>
+    <p><strong>Description-driven misrouting</strong>: two similarly-named analysis tools with near-identical descriptions → rename and differentiate, not a system-prompt keyword rule (brittle) and not lowering temperature (doesn't resolve genuine ambiguity).</p><h3 class="sec">D3 — Claude Code / configuration</h3><p>Subagent definitions (<code>.claude/agents/*.md</code> or the <code>agents</code> SDK parameter) are the concrete D3 mechanic underlying this use case's architecture. <code>SubagentStop</code> hooks are the natural fit for gating a subagent's result before the coordinator folds it in.</p><h3 class="sec">D4 — Prompting</h3><p>The prompt written <em>for</em> each subagent matters more here than almost anywhere else — it's the <em>only</em> information channel (D1's isolation rule again). A vague dispatch prompt is functionally the same failure as a vague tool description in D2.</p><h3 class="sec">D5 — Context and reliability</h3><p><strong>Lost-in-the-middle on aggregated findings</strong> is this use case's signature D5 pattern: findings from six subagents concatenated into one long synthesis input → content from the <em>middle</em> is disproportionately likely to be dropped. Fix: <strong>a key-findings summary at the beginning + explicit section headers</strong> — structure fights positional bias directly.</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">SILENT SUPPRESSION</span> a failed subagent search returning an empty result marked as success.</li>
+      <li><span class="chip">DISPROPORTIONATE</span> terminating the whole multi-agent workflow over one subagent's recoverable failure.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> granting full tool access instead of one scoped tool for the high-frequency simple case.</li>
+      <li><span class="chip">WRONG PROBLEM</span> blaming "the subagent" or "the model" when the defect is the coordinator's dispatch prompt or aggregation structure.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>Subagent failure → structured error context to the coordinator — never silent-empty-success, never a full workflow kill.</li><li>Subagents inherit nothing automatically — the dispatch prompt is the only channel; write it like a tool description.</li><li>High-frequency simple sub-need → a scoped cross-role tool, not a blanket capability grant.</li><li>Findings from the middle of a long aggregated input vanish → summary-first + explicit section headers.</li><li>Parallel independent subtasks → multiple spawn calls in one coordinator turn.</li></ul></div>
+</section>
+<section class="domain" id="uc3">
+  <div class="domain-head">
+    <div class="domain-code">UC3</div>
+    <div class="domain-title"><h2>Code Generation</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Raw-API code output or agentic file editing</b></div><div class="spec"><span>LEANS ON</span><b>D3 config · D4 structured output</b></div><div class="spec"><span>GROUNDING</span><b>Synthesized — verify</b></div></div>
+  <div class="lede"><span class="tag tag-likely">Likely</span> grounded in course material / official docs for mechanics. <span class="tag tag-guess">Guess</span> synthesized for this use case specifically.</div>
+  <div class="callout verify"><b>No prior grounding:</b> I don't have verified prior Code Generation-tagged questions of yours to ground this file the way UC1/UC2 were grounded — treat it as slightly lower-confidence. Run your trainer's AI mode a few times and check whether real question flavor matches this file's emphasis (workflow-vs-agent, hooks, TDD); trust the live pattern over this file if they diverge.</div><p>Claude generating, editing, or reviewing code — either via the raw API (structured code as output) or via Claude Code / the Agent SDK (an agent with file and shell access actually modifying a codebase). Likely tests both: the right prompt/schema for code output (D4) and the right tool/workflow discipline for an agent editing real files (D3/D1).</p><h3 class="sec">D1 — Orchestration</h3><ul>
+      <li><strong>Workflow vs. agent is a live decision, not academic</strong>: a well-specified change (add a field, rename a function, fix a known bug) is a workflow. An open-ended "improve test coverage" task is agent-shaped. A scenario proposing a full autonomous agent for a well-specified task is testing whether you'll over-reach for flexibility you don't need.</li>
+      <li>The <strong>three-step method</strong> (identify files → plan, no code yet → implement the approved plan) is a <strong>chaining</strong> pattern; <strong>test-driven development</strong> (context → propose tests → select → write code until tests pass) is an <strong>evaluator-optimizer</strong> pattern where the tests are the evaluator.</li>
+      <li><strong>Environment inspection</strong> is non-negotiable: read a file before modifying it, verify after (run the test, check the diff) rather than assuming the edit landed as intended.</li>
+    </ul><h3 class="sec">D2 — Tool design</h3><p>The <strong>Edit-fallback trap</strong> belongs here as much as in D3: reaching for <code>sed -i</code> via Bash instead of the platform's Read+Edit/Write mechanism is a tool-selection failure specific to coding agents. Structured tool errors matter for edit tools specifically — a failed edit needs to say why (pattern not found vs. file changed since last read), or the agent will blindly retry or guess at the wrong file.</p><h3 class="sec">D3 — Claude Code configuration</h3><p><code>PostToolUse</code> hooks are the mechanism for &ldquo;always run the formatter/linter after every write&rdquo; — a code-generation-flavored instance of &ldquo;hooks guarantee, prompts merely request.&rdquo; Project CLAUDE.md is where build/test commands and conventions belong — verbatim exact strings, since the model uses them literally.</p><h3 class="sec">D4 — Prompting and structured output</h3><p>For raw-API code generation: pre-fill <code>```python</code> + stop sequence <code>```</code> is the fast path to clean output; <code>tool_choice</code>-forced extraction is the reliable path for an automated pipeline. <strong>Code-based grading</strong> is the natural evaluator: <code>validate_python()</code> (AST-parses → 10, else → 0) is cheap and deterministic — evaluating generated code quality at scale wants this before a model grader.</p><h3 class="sec">D5 — Context and reliability</h3><p>Long coding sessions are where compaction bites hardest: an early architectural decision ("we use the repository pattern," "never touch legacy/") made early can be summarized away later. Durable decisions belong in CLAUDE.md, not just conversation history. For large codebases, targeted grep/glob reading is the coding-agent equivalent of RAG's "retrieve only the relevant chunk" principle.</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">NONEXISTENT FEATURE</span> a plausible-sounding but fake Claude Code flag offered as the fix.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> a full autonomous agent for a well-specified task a three-step workflow would complete more reliably.</li>
+      <li><span class="chip">WRONG PROBLEM</span> blaming "the model can't code well" when the real gap is a missing TDD loop or an unfocused CLAUDE.md.</li>
+      <li><span class="chip">PROMPT-HOPE</span> "tell it in the system prompt to always run the formatter" instead of a <code>PostToolUse</code> hook.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>Well-specified code task → workflow (three-step or TDD). Open-ended improvement task → agent, only if genuinely unpredictable.</li><li>Formatting/linting that must always happen → <code>PostToolUse</code> hook, never a prompt reminder.</li><li>Edit a file the agent has access to → native Read+Edit/Write, not a shell workaround.</li><li>Clean code output fast → pre-fill + stop sequence. Reliable code output for a pipeline → tool-forced extraction.</li><li>Evaluating generated code at scale → code grader (AST/syntax validity) before model grader.</li><li>Architectural decisions that must survive a long session → CLAUDE.md, not just conversation turns.</li></ul></div>
+</section>
+<section class="domain" id="uc4">
+  <div class="domain-head">
+    <div class="domain-code">UC4</div>
+    <div class="domain-title"><h2>Developer Productivity</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Claude Code as daily driver</b></div><div class="spec"><span>LEANS ON</span><b>D3 config · D1 parallelization</b></div><div class="spec"><span>GROUNDING</span><b>Synthesized — verify</b></div></div>
+  <div class="lede"><span class="tag tag-likely">Likely</span> grounded in course material / official docs for mechanics. <span class="tag tag-guess">Guess</span> synthesized for this use case specifically.</div>
+  <div class="callout verify"><b>No prior grounding:</b> no verified prior trainer questions of yours to ground this one. This file overlaps heavily with D3 — if D3's own content feels solid after review, this file's reliability follows since it's mostly D3 mechanics reframed. The one genuinely new claim worth spot-checking is the git-worktrees parallelization section.</div><p>Claude Code (or the Agent SDK) as a developer's day-to-day tool — memory, skills, parallel work via worktrees, automated maintenance tasks. Where Code Generation is about a single task's output quality, this use case is about the <em>system around</em> the developer's workflow. Most D3-heavy of the six use cases, with real D1 content around parallelization.</p><h3 class="sec">D3 — Claude Code configuration (the core of this use case)</h3><ul>
+      <li><strong>The full memory hierarchy is fair game here</strong>: which file a piece of context belongs in (personal preference vs. team convention vs. org-wide policy) is exactly what this use case tests. A rule for one developer only, one project's team, or an entire org → <code>CLAUDE.local.md</code> / project <code>CLAUDE.md</code> / managed policy respectively.</li>
+      <li><strong>Skills vs. CLAUDE.md vs. hooks</strong>: "a developer keeps re-explaining how to run our deploy script" → wrap it as a <strong>skill</strong> (on-demand) rather than bloating always-loaded CLAUDE.md.</li>
+      <li><strong>Auto memory's 200-line load budget</strong>: stuffing routing rules/boilerplate into auto memory instead of CLAUDE.md burns a meaningful fraction of a hard, capped budget.</li>
+    </ul><h3 class="sec">D1 — Orchestration (parallelization specifically)</h3><ul>
+      <li><strong>Git worktrees</strong> run multiple Claude Code instances on the same repo without conflicts — each worktree a full isolated copy on its own branch, merges back after. This use case's version of D1's subagent-isolation principle, applied at the session level.</li>
+      <li><strong>Custom commands</strong> (<code>.claude/commands/*.md</code> with <code>$ARGUMENTS</code>) automate the worktree create/assign/merge/cleanup cycle — the gain is "a virtual team," bounded by the developer's management capacity, not the tooling.</li>
+      <li>The <strong>automated production debugging pattern</strong> (scheduled GitHub Action → pull logs → dedupe/analyze → generate fixes → open a PR) is a <strong>workflow</strong>, not an agent — fully predetermined, which is exactly why it's reliable enough to run unattended.</li>
+    </ul><h3 class="sec">D2 — Tool design</h3><p>Developer-productivity tooling tends to reach for <strong>broad, general-purpose tools</strong> (bash, file read/write, web fetch) rather than narrow single-function ones — D1's abstraction principle showing up as a D2 tool-inventory decision.</p><h3 class="sec">D4 — Prompting</h3><p>Detailed, specific instructions to a coding-productivity agent produce meaningfully better results than vague ones — the course's explicit "effort multiplier" framing, the same specificity lesson from D4's core content viewed as a developer-experience principle.</p><h3 class="sec">D5 — Context and reliability</h3><p><strong>Compaction control is a genuine productivity lever, not just a safeguard</strong>: proactively running <code>/compact</code> at a clean breakpoint (rather than letting auto-compact fire mid-task) is a deliberate developer habit. "Session getting sluggish / forgetting earlier decisions" over a multi-hour session tests this same D5 mechanism through a productivity lens. Session forking is the productivity-flavored version of protecting durable state before it can be lost.</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">NONEXISTENT FEATURE</span> fabricated CLI flags/config keys — especially tempting here since this use case is <em>about</em> configuration.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> building custom external tooling to solve something git worktrees, a skill, or a rules file already solves natively.</li>
+      <li><span class="chip">WRONG PROBLEM</span> treating "Claude Code ignored my instruction" as an inherent limitation when the real cause is CLAUDE.md length/scope.</li>
+      <li><span class="chip">BURDEN-SHIFT</span> "have the developer manually re-explain project context every session" instead of using CLAUDE.md/auto memory.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>Scope of a rule (personal / team / org) determines which memory file it belongs in — a recurring, direct exam pattern.</li><li>Occasionally-needed procedure → skill. Always-needed context → CLAUDE.md. Must-always-happen rule → hook.</li><li>Parallel Claude Code instances on one repo → git worktrees, not manual coordination.</li><li>A fully predetermined, schedulable maintenance task → workflow, not an agent — needs to run reliably unattended.</li><li>Session getting sluggish/forgetful over hours → proactive <code>/compact</code> or session forking at a clean breakpoint.</li></ul></div>
+</section>
+<section class="domain" id="uc5">
+  <div class="domain-head">
+    <div class="domain-code">UC5</div>
+    <div class="domain-title"><h2>CI/CD</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Unattended pipeline automation</b></div><div class="spec"><span>LEANS ON</span><b>D1 workflow default · D3 hooks · D5 Batches</b></div><div class="spec"><span>GROUNDING</span><b>Synthesized — verify</b></div></div>
+  <div class="lede"><span class="tag tag-likely">Likely</span> grounded in course material / official docs for mechanics. <span class="tag tag-guess">Guess</span> synthesized for this use case specifically.</div>
+  <div class="callout verify"><b>No prior grounding:</b> no verified prior trainer questions of yours to ground this one. The highest-risk claim in this file is the Batches-API-in-CI/CD framing — cross-check it against D5's Batches section (docs-grounded) rather than treating this file's application of it as independently verified.</div><p>Claude integrated into an automated pipeline — running unattended, triggered by git events or a schedule, with no human in the loop to catch a mistake in real time. The use case where the exam's &ldquo;must always / guaranteed&rdquo; language is most <em>literally</em> true rather than just scenario flourish.</p><h3 class="sec">D1 — Orchestration</h3><ul>
+      <li><strong>"Workflow, not agent" is almost always right here</strong>, more than in any other use case — CI/CD by definition means the steps are known in advance (lint → test → build → deploy). A dynamic-planning agent for a well-understood pipeline is very likely OVER-ENGINEERING dressed as flexibility.</li>
+      <li>The <strong>automated debugging pattern</strong> (scheduled trigger → pull logs → analyze/dedupe → generate fix → open PR, never auto-merge) is this domain's canonical example — predetermined, unattended-safe, and stops at a <strong>PR</strong>, not a merge. Direct merging/deploying without a human or a deterministic gate is a red flag in most framings.</li>
+    </ul><h3 class="sec">D2 — Tool design</h3><p><strong>Tool permission scoping is sharper-edged here than anywhere else</strong>: unattended pipeline access (full filesystem, unrestricted bash, production credentials) is a materially different risk than the same tools in an interactive session where a human approves each action. Structured retryable-vs-not error signaling matters even more, because a pipeline has to decide automatically whether to retry, fail, or continue — no human makes that call live.</p><h3 class="sec">D3 — Claude Code configuration</h3><p><strong><code>PreToolUse</code> hooks are the actual enforcement mechanism for CI/CD guardrails</strong> — a hook denying a dangerous command fires before the tool executes and evaluates before any permission-mode check, meaning it can't be bypassed even in a fully automated pipeline context. The single highest-yield D3 fact for this use case. Managed/enterprise-policy CLAUDE.md is relevant specifically because it <strong>cannot be excluded</strong> by a pipeline's own project-level configuration.</p><h3 class="sec">D4 — Prompting</h3><p>Structured, machine-parseable output is close to mandatory since the next pipeline step is code, not a human reading prose — <code>tool_choice</code>-forced output is generally the more defensible choice, since "reliability &gt; setup simplicity" is close to always true for an unattended step another script will parse.</p><h3 class="sec">D5 — Context and reliability</h3><p>The <strong>Message Batches API's real constraint is a genuine CI/CD design question</strong>: bulk latency-tolerant operations (nightly evals, bulk classification of a backlog) are a legitimate Batches use case at 50% cost — but anything needing Claude to call a tool, see the result, and decide the next step <strong>cannot</strong> go through Batches, since a batch request is single-turn only. Prompt caching is a natural fit here too — pipeline runs frequently repeat identical system prompts and tool schemas across builds.</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">PROMPT-HOPE</span> at its most literal — no human in the loop to catch a failure is genuinely true here, not just scenario flavor.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> a dynamic-planning agent for a pipeline whose steps are actually fully known in advance.</li>
+      <li><span class="chip">DISPROPORTIONATE</span> failing the entire build/pipeline run on an error category that should have been a scoped retry.</li>
+      <li><span class="chip">WRONG PROBLEM</span> framing a Batches-API latency complaint as "make the batch bigger" when the actual issue is a needed iterative tool loop Batches can't provide.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>CI/CD steps are almost always known in advance → workflow is the default, not an agent.</li><li>Automated fix pattern stops at a PR — not an auto-merge — unless a deterministic gate explicitly replaces human review.</li><li>Guardrails that must hold with zero human oversight → <code>PreToolUse</code> hooks specifically, never a prompt instruction.</li><li>Org-wide rules that must apply even to pipelines teams configure themselves → managed/enterprise CLAUDE.md.</li><li>Next-step-is-code output → tool-forced structured output over pre-fill/stop-sequence.</li><li>Bulk, latency-tolerant, single-turn-per-item work → Batches API. Anything needing mid-task tool-informed continuation → not Batches.</li></ul></div>
+</section>
+<section class="domain" id="uc6">
+  <div class="domain-head">
+    <div class="domain-code">UC6</div>
+    <div class="domain-title"><h2>Data Extraction</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>ROLE</span><b>Structured output at scale</b></div><div class="spec"><span>LEANS ON</span><b>D4 tool-forcing · D5 reliability</b></div><div class="spec"><span>GROUNDING</span><b>Synthesized — verify</b></div></div>
+  <div class="lede"><span class="tag tag-likely">Likely</span> grounded in course material / official docs for mechanics. <span class="tag tag-guess">Guess</span> synthesized for this use case specifically.</div>
+  <div class="callout verify"><b>No prior grounding:</b> no verified prior trainer questions of yours to ground this one. Run a few AI-mode questions tagged toward D4/D5 and check whether real questions lean more tool-forcing-vs-prefill (this file's emphasis) or more RAG/chunking (treated as secondary here) — that balance is inference, not a verified pattern.</div><p>Pulling structured data out of unstructured or semi-structured sources — documents, PDFs, images, scraped text — at scale, usually feeding a downstream system that expects clean, parseable output. D4's structured-output content and D5's reliability content applied together, plus D2's tool layer when the source material itself needs processing first.</p><h3 class="sec">D4 — Structured output (the core of this use case)</h3><p><strong>The pre-fill/stop-sequence vs. tool-forced-extraction decision is the central D4 question here</strong>, and this use case tips hardest toward tool-forcing: an extraction pipeline almost always feeds something downstream that breaks on malformed JSON, so <code>tool_choice</code> against a real schema is generally the more defensible default — pre-fill is better reserved for quick/one-off extractions.</p>
+    <p><strong>Code-based grading</strong> is the natural evaluator: <code>validate_json()</code> (parses → 10, else → 0) is a cheap, deterministic, directly-relevant check — quality starts with "is this even valid JSON" before semantic correctness.</p><h3 class="sec">D5 — Reliability (the domain's other core)</h3><p><strong>HEURISTIC GUESS is this use case's signature trap.</strong> When extracted data conflicts across sources, the correct move is to <strong>ask for clarification/identifiers, or keep both values explicitly annotated with their source</strong> — never silently pick the most recent one, the "more prestigious" source, or an average.</p>
+    <p><strong>Citations</strong> exist specifically for this use case's verifiability problem — letting a downstream consumer check <em>where</em> an extracted value came from rather than trusting the extraction blind. <strong>Cosine similarity vs. distance</strong> matters concretely if extraction involves retrieving the right source chunk first. Large documents needing field-level extraction are a direct RAG use case: chunk, retrieve the relevant section, extract from that section specifically.</p><h3 class="sec">D2 — Tool design</h3><p><strong>Files API + code execution</strong> is the mechanism when source material needs processing before extraction is possible — a scanned PDF, a spreadsheet needing parsing first. Structured tool errors matter for <strong>partial extraction failures</strong>: a batch pipeline needs to know which specific document failed and why, not a generic failure signal that forces reprocessing the entire batch.</p><h3 class="sec">D1 — Orchestration</h3><p>Bulk extraction across many independent documents is a <strong>parallelization</strong> workflow almost by definition — each document's extraction is independent, exactly the shape that benefits from parallel dispatch rather than sequential one-at-a-time processing.</p><h3 class="sec">D3 — Claude Code configuration</h3><p>Least central of the five here, but a skill packaging a specific document format's extraction conventions is a legitimate on-demand home for that domain knowledge — relevant if Claude Code is processing a batch of files from disk rather than the raw API.</p><h3 class="sec">Signature traps for this use case</h3><ul>
+      <li><span class="chip">HEURISTIC GUESS</span> picking the most recent/prestigious source, or averaging conflicting values, instead of asking or annotating both.</li>
+      <li><span class="chip">SILENT SUPPRESSION</span> dropping a field that failed to extract instead of surfacing it as missing/uncertain; a batch job reporting success while silently skipping malformed records.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> building a custom classifier to route documents by type when a sharper extraction-tool schema would already disambiguate them.</li>
+      <li><span class="chip">DISPROPORTIONATE</span> failing an entire batch extraction job because one document in a thousand was malformed.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference</div><ul><li>Production extraction pipeline → tool-forced structured output over pre-fill/stop-sequence, most of the time.</li><li>Validity check for extracted output → code grader (JSON/schema validation) before a model grader.</li><li>Conflicting extracted values → ask for identifiers, or keep both annotated with source. Never guess, average, or silently pick one.</li><li>Need to verify where an extracted value came from → citations, not blind trust in the synthesis.</li><li>Large source document → chunk and retrieve the relevant section before extracting.</li><li>Many independent documents → parallelize; one bad document → flag and continue, don't fail the whole batch.</li></ul></div>
+</section>
+      <footer class="page-end">CCA-F Use-Case Notes · consolidated from 6 source study files · UC1/UC2 grounded, UC3-6 synthesized and flagged · pairs with domainnotes.html</footer>
+    </div>
+  </main>
+</div>
+<script>
+(function(){
+  var toggle=document.querySelector('.menu-toggle');
+  var sidebar=document.querySelector('.sidebar');
+  var scrim=document.querySelector('.scrim');
+  function close(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  if(toggle){toggle.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});}
+  if(scrim){scrim.addEventListener('click',close);}
+  document.querySelectorAll('nav.toc a').forEach(function(a){a.addEventListener('click',close);});
+
+  var links=Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var sections=links.map(function(a){return document.querySelector(a.getAttribute('href'));}).filter(Boolean);
+  function onScroll(){
+    var y=window.scrollY+120;
+    var current=sections[0];
+    sections.forEach(function(s){if(s.offsetTop<=y){current=s;}});
+    links.forEach(function(a){a.classList.remove('active');});
+    if(current){
+      var match=links.find(function(a){return a.getAttribute('href')==='#'+current.id;});
+      if(match){match.classList.add('active');}
+    }
+  }
+  document.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+
+  /* theme toggle — writes the same 'ccaf-theme' key the trainer reads */
+  var tbtns=Array.prototype.slice.call(document.querySelectorAll('.themeset button'));
+  function applyTheme(m){
+    if(m==='light'){document.documentElement.setAttribute('data-theme','light');}
+    else if(m==='dark'){document.documentElement.setAttribute('data-theme','dark');}
+    else {document.documentElement.removeAttribute('data-theme');}
+    tbtns.forEach(function(b){
+      var on=b.getAttribute('data-theme-set')===m;
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-pressed',on?'true':'false');
+    });
+  }
+  var tmode='system';try{tmode=localStorage.getItem('ccaf-theme')||'system';}catch(e){}
+  applyTheme(tmode);
+  tbtns.forEach(function(b){b.addEventListener('click',function(){
+    var m=b.getAttribute('data-theme-set');
+    try{localStorage.setItem('ccaf-theme',m);}catch(e){}
+    applyTheme(m);
+  });});
+})();
+</script>
+</body>
+</html>

@@ -239,6 +239,7 @@ li{margin-bottom:6px}
 <nav><div class="tabs" role="tablist" aria-label="Trainer sections">
   <button class="tab on" data-p="overview" role="tab" id="tab-overview" aria-controls="p-overview" aria-selected="true" tabindex="0">OVERVIEW</button>
   <button class="tab" data-p="study" role="tab" id="tab-study" aria-controls="p-study" aria-selected="false" tabindex="-1">CHEAT SHEETS</button>
+  <button class="tab" data-p="notes" role="tab" id="tab-notes" aria-controls="p-notes" aria-selected="false" tabindex="-1">NOTES</button>
   <button class="tab" data-p="flash" role="tab" id="tab-flash" aria-controls="p-flash" aria-selected="false" tabindex="-1">FLASHCARDS</button>
   <button class="tab" data-p="mock" role="tab" id="tab-mock" aria-controls="p-mock" aria-selected="false" tabindex="-1">MOCK EXAM</button>
   <button class="tab" data-p="resources" role="tab" id="tab-resources" aria-controls="p-resources" aria-selected="false" tabindex="-1">RESOURCES</button>
@@ -336,6 +337,25 @@ li{margin-bottom:6px}
   <div id="sheets"></div>
 </section>
 
+<!-- NOTES -->
+<section class="pane" id="p-notes">
+  <div class="card">
+    <h2>Reference notes</h2>
+    <p>Long-form study notes that sit alongside the drills — the cheat sheets above are compressed for rapid recall, these are the full working-out. Both pages are confidence-tagged: claims are marked <b>Cert</b>, <b>Likely</b>, or <b>Guess</b> so you know what is grounded and what is inference worth verifying.</p>
+    <p style="margin-top:8px;font-size:.84rem">They open in a new tab, so anything in progress here survives — and they follow your light/dark setting, with their own toggle if you want to change it while reading.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">📐 Domain Notes</h3>
+    <p>The five exam domains in full — mechanics blended with exam judgment, and which trap family bites in which domain. Covers the agentic loop and subagent inheritance (D1), tool descriptions and MCP primitives (D2), the CLAUDE.md hierarchy and hooks (D3), prompting and structured output (D4), and compaction, caching, and the Batches API (D5). Weighted 27/18/20/20/15 to match the exam.</p>
+    <div class="btnrow"><a class="btn blue" href="domainnotes.html" target="_blank" rel="noopener">Open Domain Notes ↗</a></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">🗂 Use-Case Notes</h3>
+    <p>The six scenarios, read across all five domains — four are drawn per sitting, and this is where cross-domain synthesis actually gets tested. Support Agent and Multi-Agent Research are grounded in this trainer's own authored bank; Code Generation, Developer Productivity, CI/CD, and Data Extraction are synthesized and explicitly flagged for verification.</p>
+    <div class="btnrow"><a class="btn blue" href="usecasesnotes.html" target="_blank" rel="noopener">Open Use-Case Notes ↗</a></div>
+  </div>
+</section>
+
 <!-- FLASHCARDS -->
 <section class="pane" id="p-flash">
   <div class="card">
@@ -372,6 +392,12 @@ li{margin-bottom:6px}
       <p style="margin-top:8px">Measured across this bank: in Anthropic's 12 official sample questions the correct answer is the longest option <b>12/12 times</b> (1.50× the average distractor). That length tell is real — but it was far stronger in my authored questions (2.2×, up to 3.9×) because my distractors were one-line strawmen while the correct answer carried its own justification. <b>Medium and Hard move that justification into the explanation.</b> Measured across the original 108-question judgment bank, that took the tell from <b>1.63× / longest 71% of the time</b> down to <b>1.11× / 35%</b> (random is 25%) — the bank has since grown to 220, but the mechanism is identical. <b>Easy</b> keeps the original phrasing, tell intact.</p>
       <p style="margin-top:8px"><b>Why it isn't 25%:</b> Anthropic's 12 official sample questions are left <i>verbatim</i> — they're the only real calibration that exists, and rewriting them would mean you're no longer practising on the actual published samples. They keep their tell at every difficulty. So Hard doesn't mean "no tell ever"; it means none of the artificial tell that my own authoring introduced.</p>
       <p style="margin-top:8px"><b>Caveat that survives:</b> n=12 is a small sample, and guide samples are written to teach, so they may run more verbose than live exam items. Use length as a last-resort tiebreaker when you're stuck and out of time — never as a strategy.</p></details>
+    </div>
+    <div class="card">
+      <h2>Focus Drill <span class="pill src" style="font-size:.62rem;vertical-align:middle">OBJECTIVE REMEDIATION</span></h2>
+      <p>36 newly-authored questions targeting the eleven objectives from your score report — the ones this bank under-covers. Confidence-gated: you must commit to Guessing / Fairly sure / Certain <i>before</i> the answer reveals, so confident-and-wrong becomes visible instead of invisible. Ends with a calibration report that flags every blind spot.</p>
+      <p style="margin-top:8px;font-size:.84rem">Runs as its own page — the difficulty picker above doesn't apply, since these options are always length-neutralised. Opens in a new tab so any sitting in progress here survives.</p>
+      <div class="btnrow"><a class="btn blue" href="focus-drill.html" target="_blank" rel="noopener">Open Focus Drill ↗</a></div>
     </div>
     <div class="card">
       <h2>Full mock — the real thing</h2>

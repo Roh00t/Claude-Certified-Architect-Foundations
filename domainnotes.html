@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Domain Notes — CCA-F</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  /* LIGHT (default) — surfaces align with the trainer's paper/card/ink tokens.
+     The gold accent is darkened from #c9a15a so it stays readable on white. */
+  --bg:#EEF1F5;
+  --bg2:#E4E9F1;
+  --grid:rgba(22,35,59,0.055);
+  --panel:#FFFFFF;
+  --panel-raised:#F2F5F9;
+  --border:#CBD5E3;
+  --border-soft:#DEE4EE;
+  --text:#16233B;
+  --text-dim:#4A5A74;
+  --text-faint:#6E7E9B;
+  --accent:#8A6620;
+  --accent-soft:rgba(138,102,32,0.10);
+  --accent-line:rgba(138,102,32,0.32);
+  --wrong:#B23F32;
+  --wrong-soft:rgba(178,63,50,0.08);
+  --wrong-line:rgba(178,63,50,0.30);
+  --right:#2E7D6B;
+  --right-soft:rgba(46,125,107,0.09);
+  --right-line:rgba(46,125,107,0.30);
+  --cert:#2E7D6B;
+  --likely:#8A6620;
+  --guess:#B23F32;
+  --glow:rgba(138,102,32,0.05);
+  --hero-glow:rgba(138,102,32,0.045);
+  --code-text:#6B4E14;
+  --wrong-cell-text:#7A2B21;
+  --right-cell-text:#1F5749;
+  --drawer-shadow:rgba(22,35,59,.18);
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+  --display:'Space Grotesk',var(--sans);
+  --sidebar-w:292px;
+}
+/* DARK — the original palette, applied by explicit toggle or OS preference */
+:root[data-theme="dark"]{
+  --bg:#0c1524;
+  --bg2:#0a1220;
+  --grid:rgba(148,180,214,0.055);
+  --panel:#131f34;
+  --panel-raised:#17253d;
+  --border:#233650;
+  --border-soft:#1a2b45;
+  --text:#e8edf6;
+  --text-dim:#93a7c4;
+  --text-faint:#5b7091;
+  --accent:#c9a15a;
+  --accent-soft:rgba(201,161,90,0.14);
+  --accent-line:rgba(201,161,90,0.35);
+  --wrong:#d3695c;
+  --wrong-soft:rgba(211,105,92,0.10);
+  --wrong-line:rgba(211,105,92,0.32);
+  --right:#5cab9b;
+  --right-soft:rgba(92,171,155,0.10);
+  --right-line:rgba(92,171,155,0.32);
+  --cert:#5cab9b;
+  --likely:#c9a15a;
+  --guess:#d3695c;
+  --glow:rgba(201,161,90,0.06);
+  --hero-glow:rgba(201,161,90,0.05);
+  --code-text:#f0e3c8;
+  --wrong-cell-text:#f0d3ce;
+  --right-cell-text:#cfe9e2;
+  --drawer-shadow:rgba(0,0,0,.4);
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+  --bg:#0c1524;
+  --bg2:#0a1220;
+  --grid:rgba(148,180,214,0.055);
+  --panel:#131f34;
+  --panel-raised:#17253d;
+  --border:#233650;
+  --border-soft:#1a2b45;
+  --text:#e8edf6;
+  --text-dim:#93a7c4;
+  --text-faint:#5b7091;
+  --accent:#c9a15a;
+  --accent-soft:rgba(201,161,90,0.14);
+  --accent-line:rgba(201,161,90,0.35);
+  --wrong:#d3695c;
+  --wrong-soft:rgba(211,105,92,0.10);
+  --wrong-line:rgba(211,105,92,0.32);
+  --right:#5cab9b;
+  --right-soft:rgba(92,171,155,0.10);
+  --right-line:rgba(92,171,155,0.32);
+  --cert:#5cab9b;
+  --likely:#c9a15a;
+  --guess:#d3695c;
+  --glow:rgba(201,161,90,0.06);
+  --hero-glow:rgba(201,161,90,0.05);
+  --code-text:#f0e3c8;
+  --wrong-cell-text:#f0d3ce;
+  --right-cell-text:#cfe9e2;
+  --drawer-shadow:rgba(0,0,0,.4);
+  }
+}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+@media(prefers-color-scheme:dark){html:not([data-theme="light"]){color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/48px 48px,
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/48px 48px,
+    radial-gradient(ellipse 900px 500px at 15% -10%, var(--glow), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:15.5px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--accent-soft);color:var(--text)}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.88em;background:var(--panel-raised);border:1px solid var(--border-soft);padding:.1em .42em;border-radius:4px;color:var(--code-text)}
+
+/* ---------- layout shell ---------- */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);
+  background:linear-gradient(180deg,var(--bg2),var(--bg));
+  border-right:1px solid var(--border-soft);
+  overflow-y:auto;padding:26px 20px 40px;
+  z-index:40;
+}
+.sidebar::-webkit-scrollbar{width:8px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px}
+
+.brand{display:block;margin-bottom:4px}
+.brand .kicker{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;color:var(--text-faint);text-transform:uppercase}
+.brand h1{font-family:var(--display);font-size:20px;font-weight:700;margin:4px 0 2px;letter-spacing:.01em;line-height:1.25}
+.brand .sub{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.04em}
+
+.titleblock{
+  margin:18px 0 22px;padding:12px 13px;border:1px solid var(--border);
+  border-left:3px solid var(--accent);background:var(--panel);
+  font-family:var(--mono);font-size:10.6px;color:var(--text-dim);
+}
+.titleblock div{display:flex;justify-content:space-between;padding:2px 0}
+.titleblock b{color:var(--text);font-weight:600}
+
+.crosslink{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);
+  text-decoration:none;border:1px solid var(--border);border-radius:7px;
+  padding:9px 11px;margin-bottom:22px;transition:border-color .15s,color .15s;
+}
+.crosslink:hover{border-color:var(--accent-line);color:var(--accent)}
+.crosslink .arrow{color:var(--accent)}
+
+.themeset{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden;margin-bottom:18px}
+.themeset button{flex:1;font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:7px 4px;border:none;background:transparent;color:var(--text-dim);cursor:pointer;border-right:1px solid var(--border)}
+.themeset button:last-child{border-right:none}
+.themeset button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.themeset button:hover:not(.on){color:var(--text)}
+.themeset button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.navlabel{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--text-faint);text-transform:uppercase;margin:22px 0 10px}
+nav.toc{display:flex;flex-direction:column;gap:3px}
+nav.toc a{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 9px;border-radius:7px;text-decoration:none;
+  color:var(--text-dim);font-size:13px;border:1px solid transparent;
+  transition:background .15s,color .15s,border-color .15s;
+}
+nav.toc a:hover{background:var(--panel-raised);color:var(--text)}
+nav.toc a.active{background:var(--accent-soft);color:var(--text);border-color:var(--accent-line)}
+nav.toc .code{font-family:var(--mono);font-size:11px;color:var(--accent);min-width:26px;font-weight:600}
+nav.toc .meta{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--text-faint)}
+nav.toc .bar{height:3px;border-radius:2px;background:var(--border);margin-top:5px;overflow:hidden;position:relative}
+nav.toc .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:2px}
+.navitem{display:flex;flex-direction:column;gap:0}
+
+.back-top{
+  display:block;margin-top:24px;font-family:var(--mono);font-size:10.5px;
+  color:var(--text-faint);text-decoration:none;letter-spacing:.05em;
+}
+.back-top:hover{color:var(--accent)}
+
+/* ---------- main content ---------- */
+main{margin-left:var(--sidebar-w);flex:1;min-width:0}
+.hero{
+  padding:56px 54px 34px;border-bottom:1px solid var(--border-soft);
+  background:linear-gradient(180deg,var(--hero-glow),transparent 70%);
+}
+.hero .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--accent);text-transform:uppercase}
+.hero h1{font-family:var(--display);font-size:38px;font-weight:700;margin:10px 0 12px;letter-spacing:-.01em}
+.hero p{color:var(--text-dim);max-width:640px;font-size:15px}
+.hero .stamp-row{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.stamp{
+  font-family:var(--mono);font-size:11px;color:var(--text-dim);
+  border:1px solid var(--border);border-radius:6px;padding:6px 10px;
+  background:var(--panel);
+}
+.stamp b{color:var(--accent);font-weight:600}
+
+.wrap{max-width:840px;padding:0 54px 120px}
+
+section.domain{padding-top:64px;border-top:1px dashed var(--border)}
+section.domain:first-of-type{border-top:none}
+
+.domain-head{display:flex;align-items:flex-start;gap:18px;margin-bottom:6px}
+.domain-code{
+  font-family:var(--display);font-size:44px;font-weight:700;color:var(--accent);
+  line-height:1;letter-spacing:-.02em;min-width:78px;
+}
+.domain-title h2{font-family:var(--display);font-size:24px;font-weight:600;margin:2px 0 8px;letter-spacing:-.005em}
+.spec-strip{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.spec{
+  font-family:var(--mono);font-size:10.5px;color:var(--text-faint);
+  border-left:2px solid var(--border);padding-left:8px;
+}
+.spec b{display:block;color:var(--text-dim);font-size:12.5px;margin-top:1px}
+
+.lede{color:var(--text-dim);font-size:14.8px;margin:14px 0 28px;padding:14px 16px;background:var(--panel);border:1px solid var(--border-soft);border-radius:9px}
+.lede b{color:var(--text)}
+
+h3.sec{font-family:var(--display);font-size:17px;font-weight:600;margin:34px 0 12px;color:var(--text);display:flex;align-items:center;gap:10px}
+h3.sec::before{content:'';width:16px;height:1px;background:var(--accent-line)}
+h4.sub{font-family:var(--sans);font-size:14.5px;font-weight:600;margin:20px 0 8px;color:var(--text)}
+p{margin:0 0 13px}
+ul,ol{margin:0 0 14px;padding-left:22px}
+li{margin-bottom:6px}
+strong{color:var(--text);font-weight:600}
+
+/* confidence tags */
+.tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.03em;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.tag-cert{color:var(--cert);background:var(--right-soft);border:1px solid var(--right-line)}
+.tag-likely{color:var(--likely);background:var(--accent-soft);border:1px solid var(--accent-line)}
+.tag-guess{color:var(--guess);background:var(--wrong-soft);border:1px solid var(--wrong-line)}
+
+/* trap family chip */
+.chip{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--accent);border:1px solid var(--accent-line);background:var(--accent-soft);padding:2px 8px;border-radius:20px;white-space:nowrap}
+
+/* callouts */
+.callout{border-left:3px solid var(--accent);background:var(--panel);border-radius:0 9px 9px 0;padding:13px 16px;margin:18px 0;font-size:14px;color:var(--text-dim)}
+.callout b{color:var(--accent)}
+.callout.harden{border-left-color:var(--wrong)}
+.callout.harden b{color:var(--wrong)}
+.callout.verify{border-left-color:var(--right)}
+.callout.verify b{color:var(--right)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;margin:16px 0 22px;border:1px solid var(--border);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13.3px}
+table caption{caption-side:top;text-align:left;font-family:var(--mono);font-size:11px;color:var(--text-faint);padding:10px 14px;letter-spacing:.03em}
+th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);text-align:left;padding:10px 13px;background:var(--panel-raised);border-bottom:1px solid var(--border)}
+td{padding:11px 13px;border-bottom:1px solid var(--border-soft);vertical-align:top;color:var(--text-dim)}
+tr:last-child td{border-bottom:none}
+td.wrong-cell{background:var(--wrong-soft);color:var(--wrong-cell-text);border-left:2px solid var(--wrong-line)}
+td.right-cell{background:var(--right-soft);color:var(--right-cell-text);border-left:2px solid var(--right-line)}
+td.where-cell{font-family:var(--mono);font-size:11.5px;color:var(--text-faint)}
+
+/* quick reference box */
+.qref{margin:30px 0 10px;border:1px solid var(--accent-line);border-radius:11px;background:linear-gradient(180deg,var(--accent-soft),transparent);padding:18px 20px}
+.qref .qref-h{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.qref ul{margin:0;padding-left:0;list-style:none}
+.qref li{position:relative;padding-left:20px;margin-bottom:9px;color:var(--text-dim);font-size:13.6px}
+.qref li::before{content:'▸';position:relative;color:var(--accent);position:absolute;left:0;top:0}
+
+footer.page-end{padding:50px 54px 90px;color:var(--text-faint);font-family:var(--mono);font-size:11px;border-top:1px dashed var(--border);margin-top:20px}
+
+/* mobile */
+.menu-toggle{display:none}
+@media (max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:transform .2s ease;box-shadow:20px 0 40px var(--drawer-shadow)}
+  .sidebar.open{transform:translateX(0)}
+  main{margin-left:0}
+  .hero{padding:50px 22px 26px}
+  .wrap{padding:0 22px 90px}
+  .menu-toggle{
+    display:flex;position:fixed;top:16px;left:16px;z-index:50;
+    width:42px;height:42px;border-radius:9px;background:var(--panel-raised);
+    border:1px solid var(--border);align-items:center;justify-content:center;
+    cursor:pointer;color:var(--accent);font-family:var(--mono);
+  }
+  .scrim{display:none;position:fixed;inset:0;background:rgba(5,9,16,.55);z-index:39}
+  .scrim.show{display:block}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.sidebar{transition:none}}
+</style>
+<script>
+/* Apply the trainer's saved theme before first paint (shared 'ccaf-theme' key,
+   same origin as index.html). Runs in <head> so there is no flash of the wrong
+   palette. Wrapped in try/catch: private mode must degrade, not break. */
+(function(){try{var m=localStorage.getItem('ccaf-theme')||'system';
+if(m==='light')document.documentElement.setAttribute('data-theme','light');
+else if(m==='dark')document.documentElement.setAttribute('data-theme','dark');}catch(e){}})();
+</script>
+</head>
+<body>
+<div class="menu-toggle" aria-label="Toggle menu">☰</div>
+<div class="scrim"></div>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="kicker">CCA-F Exam Prep</span>
+      <h1>Domain Notes</h1>
+      <span class="sub">5 domains · full mechanics + judgment</span>
+    </div>
+    <div class="titleblock">
+      <div><span>EXAM</span><b>CCA-F</b></div>
+      <div><span>DRAWN</span><b>4 / 6 SCENARIOS</b></div>
+      <div><span>PASS MARK</span><b>720 / 1000</b></div>
+      <div><span>REV</span><b>JUL 2026</b></div>
+    </div>
+    <a class="crosslink" href="usecasesnotes.html"><span class="arrow">↳</span> Use-Case Notes</a>
+    <div class="themeset" role="group" aria-label="Color theme">
+      <button type="button" data-theme-set="light" aria-pressed="false">LIGHT</button>
+      <button type="button" data-theme-set="system" aria-pressed="false">SYSTEM</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">DARK</button>
+    </div>
+    <div class="navlabel">On this page</div>
+    <nav class="toc">
+      
+        <div class="navitem">
+          <a href="#d1">
+            <span class="code">D1</span>
+            <span>Agentic Architecture</span>
+            <span class="meta">27%</span>
+          </a>
+          <div class="bar"><i style="width:27%"></i></div>
+        </div>
+        <div class="navitem">
+          <a href="#d2">
+            <span class="code">D2</span>
+            <span>Tool Design &amp; MCP</span>
+            <span class="meta">18%</span>
+          </a>
+          <div class="bar"><i style="width:18%"></i></div>
+        </div>
+        <div class="navitem">
+          <a href="#d3">
+            <span class="code">D3</span>
+            <span>Claude Code Config</span>
+            <span class="meta">20%</span>
+          </a>
+          <div class="bar"><i style="width:20%"></i></div>
+        </div>
+        <div class="navitem">
+          <a href="#d4">
+            <span class="code">D4</span>
+            <span>Prompt Engineering</span>
+            <span class="meta">20%</span>
+          </a>
+          <div class="bar"><i style="width:20%"></i></div>
+        </div>
+        <div class="navitem">
+          <a href="#d5">
+            <span class="code">D5</span>
+            <span>Context &amp; Reliability</span>
+            <span class="meta">15%</span>
+          </a>
+          <div class="bar"><i style="width:15%"></i></div>
+        </div>
+    </nav>
+    <a class="back-top" href="index.html">← Back to Exam Trainer</a>
+  </aside>
+  <main>
+    <div class="hero">
+      <span class="eyebrow">Reference · Domains</span>
+      <h1>The 5 exam domains, in full</h1>
+      <p>Technical mechanics blended with exam-judgment framing — which trap family hits which domain, and why. Grounded in course material, official docs, and your own trainer's cheat sheets; gap-filled sections are confidence-tagged.</p>
+      <div class="stamp-row"><div class="stamp">D1 <b>27%</b></div><div class="stamp">D2 <b>18%</b></div><div class="stamp">D3 <b>20%</b></div><div class="stamp">D4 <b>20%</b></div><div class="stamp">D5 <b>15%</b></div></div>
+    </div>
+    <div class="wrap">
+      
+<section class="domain" id="d1">
+  <div class="domain-head">
+    <div class="domain-code">D1</div>
+    <div class="domain-title"><h2>Agentic Architecture &amp; Orchestration</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>WEIGHT</span><b>~27% · largest domain</b></div><div class="spec"><span>MOCK-60</span><b>16 questions</b></div><div class="spec"><span>DRAW-18</span><b>5 questions</b></div><div class="spec"><span>BASIS</span><b>Course material + your trainer</b></div></div>
+  <div class="lede">This is the single biggest domain on the exam, and the one most questions dress up as something else — a tool-design or prompting question — when the actual failure is architectural. If a scenario shows an agent doing the wrong thing, check orchestration first.</div>
+  <h3 class="sec">1. The agentic loop — mechanics</h3><p><span class="tag tag-cert">Cert</span> The core loop: send messages + tools → Claude returns a response → check <code>stop_reason</code> → if <code>"tool_use"</code>, execute the requested tool(s), append the results as a user message, and call again → if <code>"end_turn"</code>, you're done.</p><p><strong>The three loop-termination anti-patterns</strong> — know these cold:</p><ol>
+      <li>Parsing the assistant's natural-language text for completion signals ("I'm done," "Task complete") instead of checking <code>stop_reason</code>.</li>
+      <li>Using an arbitrary iteration cap as the <em>primary</em> stop condition rather than a safety backstop.</li>
+      <li>Treating the mere presence of assistant text as evidence of completion — text and tool calls can coexist in the same message.</li>
+    </ol><div class="callout"><b>Exam framing:</b> any option that says "check if the response contains the word 'done'" or "stop after N tool calls" as the <em>main</em> control mechanism is bait. The correct mechanism is always <code>stop_reason</code>.</div><h3 class="sec">2. Subagents — the orchestration primitive</h3><p><span class="tag tag-cert">Cert</span> Subagents are separate Claude instances the lead agent spawns for focused subtasks. The defining property: <strong>a subagent's context window starts completely fresh.</strong></p><h4 class="sub">What a subagent inherits — the highest-yield fact in this domain</h4><ul>
+      <li><span class="tag tag-cert">Cert</span> It does <strong>not</strong> automatically receive the parent's conversation history, system prompt, or the parent's preloaded skills.</li>
+      <li><span class="tag tag-cert">Cert</span> The <em>only</em> channel from parent to subagent is the prompt string in the spawn call. File paths, prior findings, error messages, decisions — all must be written explicitly into that prompt.</li>
+      <li><span class="tag tag-likely">Likely</span> It does receive: its own system prompt, environment details Claude Code appends, the CLAUDE.md/memory hierarchy, a git-status snapshot from session start. The two built-ins — <strong>Explore</strong> and <strong>Plan</strong> — deliberately skip CLAUDE.md and git status to stay fast and cheap.</li>
+      <li><span class="tag tag-cert">Cert</span> On return: only the subagent's <strong>final message</strong> goes back to the parent. Every intermediate tool call, every file it read, stays inside the subagent.</li>
+    </ul><h4 class="sub">Spawning mechanism</h4><p><span class="tag tag-guess">Guess</span> Historically called <code>Task</code>, renamed <code>Agent</code> in Claude Code v2.1.63 — shipping product and older grounding material may disagree on the name. The tool name <strong>must be in <code>allowedTools</code></strong> for a coordinator to spawn subagents at all.</p><p><span class="tag tag-cert">Cert</span> <strong>Parallel execution:</strong> multiple subagent calls emitted in a single coordinator response run concurrently. Emitting them across separate turns forces sequential execution instead. A subagent cannot spawn its own subagents.</p><p><strong>Three definition methods:</strong> (1) programmatically via an <code>agents</code> parameter, (2) filesystem markdown in <code>.claude/agents/</code>, (3) the built-in <code>general-purpose</code> subagent, no definition required.</p><h3 class="sec">3. Workflows vs. Agents — the core decision rule</h3><p><strong>Workflow</strong> = you know the exact steps in advance → hard-code the sequence. <strong>Agent</strong> = steps aren't knowable in advance → give Claude general tools and let it plan dynamically.</p><div class="tbl-wrap"><table>
+    <caption>Decision matrix — this table is a direct exam trap target</caption>
+    <thead><tr><th>Dimension</th><th>Workflow</th><th>Agent</th></tr></thead>
+    <tbody><tr><td>Steps</td><td>Predetermined</td><td>Dynamically planned</td></tr><tr><td>Testability</td><td>Easier — known path</td><td>Harder — unpredictable</td></tr><tr><td>Inputs</td><td>User supplies specific inputs</td><td>Agent derives its own, can ask for more</td></tr><tr><td>Completion rate</td><td><strong>Higher</strong> (structured)</td><td><strong>Lower</strong> (delegated complexity)</td></tr><tr><td>Default choice</td><td><strong>Yes — reliability first</strong></td><td>Only when genuine flexibility required</td></tr></tbody>
+    </table></div><div class="callout"><b>Trap:</b> agents have a stated <em>lower</em> completion rate than workflows. A scenario offering an agent solution to a well-defined, repeatable task is very likely wrong — "agent = more capable = better" is exactly the intuition being tested against.</div><h4 class="sub">Named workflow patterns</h4><ul>
+      <li><strong>Evaluator–optimizer</strong>: producer generates, evaluator scores/critiques, loop until accepted.</li>
+      <li><strong>Parallelization</strong>: split a multi-factor decision into independent parallel sub-calls, then aggregate.</li>
+      <li><strong>Chaining</strong>: sequential separate calls. Trigger: Claude keeps <em>partially</em> violating a constraint-heavy prompt no matter how many times you repeat the constraint — generate first, accept the imperfect output, then run a targeted rewrite pass against the specific violations found.</li>
+      <li><strong>Routing</strong>: a cheap first call classifies input, then dispatches to a category-specific pipeline.</li>
+    </ul><h4 class="sub">Agent design principles</h4><ul>
+      <li><strong>Abstract, general-purpose tools beat hyper-specific ones</strong> — bash/web_fetch/file_write (broad, recombinable) vs. a hypothetical refactor_tool (narrow).</li>
+      <li><strong>Environment inspection is mandatory for agents</strong> — since an agent can't fully predict its own action's result, it must observe the new state afterward.</li>
+    </ul><h3 class="sec">4. Judgment layer — how D1 questions get you</h3><ul>
+      <li><strong>OVER-ENGINEERING</strong> in orchestration: a routing classifier or "supervisor agent" fixing what a better task decomposition or sharper subagent prompt would fix directly. Cue: "most effective first step" → cheapest root-cause fix wins.</li>
+      <li><strong>WRONG PROBLEM — the domain's signature trap</strong>: a subagent gets blamed for a bad result when the actual failure was the coordinator's narrow decomposition. The subagent did exactly what it was told; what it was told was incomplete.</li>
+      <li><strong>DISPROPORTIONATE</strong>: "terminate the whole run," "re-run every subagent," "escalate every case" when a scoped retry would do.</li>
+      <li><strong>PROMPT-HOPE</strong>: guaranteed sequencing/handoff between agents controlled only by a system-prompt instruction to "please pass along X."</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference / rapid recall</div><ul><li>Continue on <code>stop_reason == "tool_use"</code>; stop on <code>"end_turn"</code> — never parse text, never rely on an iteration cap as the primary stop.</li><li>Subagents inherit <strong>nothing</strong> automatically except their own system prompt + environment details + CLAUDE.md/git snapshot — findings must be passed explicitly in the spawn prompt.</li><li>Only the subagent's <strong>final message</strong> returns to the parent.</li><li>Parallel subagents = multiple spawn calls in <strong>one</strong> turn, not across turns.</li><li>Workflows: reliability, predetermined, higher completion rate, default choice. Agents: flexibility, dynamic, lower completion rate, only when steps are genuinely unknowable.</li><li>Named patterns: evaluator-optimizer, parallelization, chaining, routing.</li><li>The domain's signature exam trap: blaming the subagent/tool/model when the coordinator's decomposition was the actual root cause.</li></ul></div>
+</section>
+<section class="domain" id="d2">
+  <div class="domain-head">
+    <div class="domain-code">D2</div>
+    <div class="domain-title"><h2>Tool Design &amp; MCP Integration</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>WEIGHT</span><b>~18% · smallest core domain</b></div><div class="spec"><span>MOCK-60</span><b>11 questions</b></div><div class="spec"><span>DRAW-18</span><b>3 questions</b></div><div class="spec"><span>BASIS</span><b>Your own trainer's D2 cheat sheet</b></div></div>
+  <div class="lede">Your own post-mock diagnostic flagged this as your weakest domain (73%). Smaller question count than D1/D3/D4 raises the cost of every miss.</div>
+  <h3 class="sec">1. Tool descriptions are the selection mechanism</h3><p><span class="tag tag-cert">Cert</span> The single most important fact in the domain: <strong>vague tool descriptions cause misrouting between similar tools.</strong> The fix is always to sharpen the description — purpose, inputs, when to use this tool vs. its alternatives — never a classifier layer, never more few-shot examples.</p><div class="callout"><b>Exam framing:</b> "what should you check first" when Claude picks the wrong tool almost always wants: read/rewrite the tool descriptions.</div><p><span class="tag tag-cert">Cert</span> <strong>Schema anatomy:</strong> <code>name</code>, <code>description</code> (3–4 sentences — what, when, returns), <code>input_schema</code>. Claude reasons over the description text, not your implementation.</p><h3 class="sec">2. Errors are structured, not generic</h3><p><span class="tag tag-cert">Cert</span> Tool errors returned to Claude should carry: <code>isError</code> + <code>errorCategory</code> (transient / validation / permission / business) + <code>isRetryable</code> + a human-readable description.</p><p><strong>Never acceptable, each a distinct trap:</strong> a bare stack trace · total silence on failure · a uniform "Operation failed" regardless of cause (loses the retryable/non-retryable distinction Claude needs).</p><h3 class="sec">3. Tool sprawl degrades selection</h3><p><span class="tag tag-cert">Cert</span> Loading 15+ tools onto a single agent measurably degrades selection accuracy. <strong>Fix: scope to 4–5 tools per role</strong>; add narrow cross-role tools only for genuinely high-frequency shared needs.</p><h3 class="sec">4. tool_choice — know the three values cold</h3><ul>
+      <li><code>auto</code> — Claude decides whether to call a tool; plain text allowed.</li>
+      <li><code>any</code> — Claude must call some tool, picks which; no text-only response.</li>
+      <li><code>{"type":"tool","name":"..."}</code> — forces that specific tool. The mechanism for <strong>reliable structured-data extraction</strong> — read the payload from <code>response.content[0].input</code>.</li>
+    </ul><p><strong>Trade-off vs. pre-fill + stop-sequence:</strong> pre-fill is faster to set up, less reliable. Tool-forcing needs a real schema but wins whenever reliability matters more than simplicity.</p><h3 class="sec">5. MCP — architecture and the trap to avoid</h3><p><span class="tag tag-cert">Cert</span> <strong>MCP is not an alternative to tool use — it's tool use with execution delegated to an external server.</strong> If an option frames MCP as competing with tool use, that's wrong by construction.</p><p><strong>Three server primitives:</strong> <strong>Tools</strong> (actions, reactive — Claude decides to call) · <strong>Resources</strong> (data, proactive — pulled in without a tool call, direct or templated URIs) · <strong>Prompts</strong> (pre-built templates, slash-command style).</p><div class="callout"><b>Trap:</b> content that gets pulled in automatically when referenced is a <strong>Resource</strong>, not a Tool. Picking "add a tool that returns this" when the need is proactive/referenced access is a WRONG-PROBLEM miss.</div><p><strong>Debugging:</strong> <code>mcp dev [server_file.py]</code> launches the MCP Inspector — browser UI to connect, browse tools/resources/prompts, manually invoke.</p><h3 class="sec">6. MCP configuration scope</h3><ul>
+      <li><span class="tag tag-cert">Cert</span> Team-shared → project <code>.mcp.json</code>, supports <code>${VAR}</code> expansion, committed to source control.</li>
+      <li><span class="tag tag-cert">Cert</span> Personal/experimental → <code>~/.claude.json</code>, not shared.</li>
+    </ul><h3 class="sec">7. Built-in tools</h3><div class="tbl-wrap"><table>
+    
+    <thead><tr><th>Tool</th><th>Custom code?</th><th>Key facts</th></tr></thead>
+    <tbody><tr><td>Text editor</td><td>Yes (execution only)</td><td>Schema <em>type</em> string is version-pinned (3.5 vs 3.7 dates differ) — a real trap source.</td></tr><tr><td>Web search</td><td>No</td><td><code>type: web_search_20250305</code>, <code>max_uses</code> caps searches, <code>allowed_domains</code> restricts scope.</td></tr><tr><td>Code execution</td><td>No (schema only)</td><td>Docker container, <strong>no network access</strong> — Files API is the in/out channel.</td></tr></tbody>
+    </table></div><h3 class="sec">Judgment layer — trap families this domain leans on</h3><ul>
+      <li><span class="chip">PROMPT-HOPE</span> "add a note telling Claude which tool to prefer" instead of sharpening the description.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> a classifier layer to disambiguate tools instead of rewriting the two descriptions to be mutually exclusive.</li>
+      <li><span class="chip">NONEXISTENT FEATURE</span> plausible-sounding but fake tool-config flags.</li>
+      <li><span class="chip">WRONG PROBLEM</span> treating a resource-shaped need as tool-shaped; blaming "the tool" when the description was the defect.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference / rapid recall</div><ul><li>Tool selection failures → fix the <strong>description</strong> first, not a classifier.</li><li>Structured tool errors: <code>isError</code> + <code>errorCategory</code> + <code>isRetryable</code> + human-readable text. Never bare stack traces, never silence, never generic "failed."</li><li>15+ tools degrades selection → scope to 4–5 per role.</li><li><code>tool_choice</code>: <code>auto</code> (optional), <code>any</code> (forced, Claude picks), <code>{"type":"tool","name":...}</code> (forced, specific — reliable structured output).</li><li>MCP = tool use with execution delegated to a server, <strong>not</strong> a competing mechanism.</li><li>Resources = proactive/referenced data. Tools = reactive/invoked actions.</li><li>Config: <code>.mcp.json</code> (team) vs. <code>~/.claude.json</code> (personal).</li></ul></div>
+</section>
+<section class="domain" id="d3">
+  <div class="domain-head">
+    <div class="domain-code">D3</div>
+    <div class="domain-title"><h2>Claude Code Configuration &amp; Workflows</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>WEIGHT</span><b>~20% · tied largest of the four</b></div><div class="spec"><span>MOCK-60</span><b>12 questions</b></div><div class="spec"><span>DRAW-18</span><b>4 questions</b></div><div class="spec"><span>BASIS</span><b>Gap-filled from current docs</b></div></div>
+  <div class="lede">The domain your original course transcript covers least — genuinely Claude Code product mechanics, not generic API building. This is the fastest-moving domain in the exam's scope; verify anything version-specific.</div>
+  <div class="callout harden"><b>Hardening note (post red-team):</b> most of this file is grounded in official code.claude.com docs, but a few specifics came from dated third-party sources. If you have 10 minutes before the exam, verify: (1) the exact hooks event list and exit-code semantics in §2, (2) the precise CLAUDE.md precedence order when personal/project/managed rules genuinely conflict in §1, (3) whether <code>allowed-tools</code> frontmatter behaves identically in Claude Code CLI vs. the SDK in §3.</div><h3 class="sec">1. CLAUDE.md memory hierarchy</h3><p><span class="tag tag-cert">Cert</span> Two complementary systems, both loaded at session start: <strong>CLAUDE.md files</strong> (instructions you write) and <strong>auto memory</strong> (notes Claude writes itself). Both are <em>context, not enforced configuration</em> — to guarantee an action regardless of what Claude decides, you need a hook (§2), not a memory file.</p><h4 class="sub">Locations, narrowest → broadest</h4><ul>
+      <li><code>CLAUDE.local.md</code> — personal, project-specific, gitignored automatically.</li>
+      <li>Project <code>./CLAUDE.md</code> — shared, committed, loaded for the whole team.</li>
+      <li>User <code>~/.claude/CLAUDE.md</code> — personal preferences, applies across all projects.</li>
+      <li>Managed/enterprise policy CLAUDE.md — org-wide; <strong>cannot be excluded</strong> by any individual setting, always applies as a floor.</li>
+    </ul><p><span class="tag tag-likely">Likely</span> <strong>Precedence:</strong> more specific overrides broader for content that actually conflicts — personal/local overrides shared project, project overrides user-global. Managed policy is a mandatory baseline that individual settings can't turn off. A user-level rule conflicting with a project-level rule in the same project → <strong>the project rule wins.</strong></p><p><span class="tag tag-likely">Likely</span> <strong>Auto memory:</strong> stored at <code>~/.claude/projects/&lt;project&gt;/memory/</code>, main file <code>MEMORY.md</code> — <strong>only the first ~200 lines load at session start</strong>, a hard budget. On by default; toggle via <code>/memory</code> or <code>autoMemoryEnabled</code>.</p><p><code>.claude/rules/*.md</code>: every file loads automatically as project memory. A <code>paths</code> YAML frontmatter field (glob patterns) scopes a rule to matching files. Keep the main CLAUDE.md under ~200 lines; move detail into rules or skills.</p><h3 class="sec">2. Hooks — deterministic enforcement</h3><p><span class="tag tag-cert">Cert</span> Hooks are user-defined event handlers that fire automatically at lifecycle points, <strong>regardless of what the model decides.</strong> This is the mechanism-level answer to "how do I guarantee X happens."</p><div class="tbl-wrap"><table>
+    <caption>Key events to know</caption>
+    <thead><tr><th>Event</th><th>What it does</th></tr></thead>
+    <tbody><tr><td><code>SessionStart</code></td><td>Fires at session start.</td></tr><tr><td><code>PreToolUse</code></td><td>Fires <em>before</em> a tool executes. Can allow/deny/ask/rewrite input. A deny is evaluated <strong>before any permission-mode check</strong> — blocks the tool even under bypass-permission modes.</td></tr><tr><td><code>PostToolUse</code></td><td>Fires after success; can inspect input/response; <strong>cannot undo</strong> the execution.</td></tr><tr><td><code>PreCompact</code> / <code>PostCompact</code></td><td>Bracket a context-compaction event; PostCompact receives the generated summary.</td></tr><tr><td><code>Stop</code> / <code>SubagentStop</code></td><td>Fire when the main agent / a subagent finishes responding.</td></tr><tr><td><code>UserPromptSubmit</code></td><td>Fires when the user submits a prompt.</td></tr></tbody>
+    </table></div><p><span class="tag tag-likely">Likely</span> <strong>Exit-code protocol:</strong> exit code 2 from a <code>PreToolUse</code> hook stops the tool; exit code 2 from a <code>Stop</code> hook forces Claude to keep working.</p><div class="callout"><b>Hooks vs. prompts:</b> use hooks when compliance must be <em>guaranteed</em> — prompts have a non-zero failure rate, hooks are deterministic. "Must never happen" → hook-space. "Should usually happen" → prompt-space.</div><h3 class="sec">3. Agent Skills — SKILL.md</h3><p><span class="tag tag-cert">Cert</span> A Skill needs at minimum a <code>SKILL.md</code> with required frontmatter <code>name</code> and <code>description</code>. <strong>Progressive disclosure:</strong> only name+description load at startup; full body loads only when relevant; bundled files load only if needed.</p><p><strong>The description is the trigger, not documentation.</strong> Third person, lead with primary use case, real trigger phrases — same failure mode as D2's tool-description lesson, one layer up.</p><p><strong>Notable frontmatter:</strong> <code>allowed-tools</code>, <code>disable-model-invocation</code> (explicit-invoke only — deploys, consequential actions), <code>user-invocable: false</code> (background knowledge), <code>context: fork</code> (isolated subagent context for verbose skill output).</p><h4 class="sub">Skills vs. CLAUDE.md vs. hooks</h4><ul>
+      <li><strong>CLAUDE.md</strong> = always-in-effect context ("the constitution").</li>
+      <li><strong>Skills</strong> = on-demand expertise, loaded when relevant ("the laws, invoked when applicable").</li>
+      <li><strong>Hooks</strong> = deterministic enforcement, independent of the model's decision ("the police").</li>
+    </ul><h3 class="sec">Judgment layer — traps specific to this domain</h3><ul>
+      <li><span class="chip">NONEXISTENT FEATURE</span> — D3's signature trap. Fabricated CLI flags/config keys: <code>--batch</code>, <code>CLAUDE_HEADLESS</code>, <code>inherit_context:true</code>, <code>parallel:true</code>, <code>context:compact</code>, a <code>commands</code> array in config.json.</li>
+      <li><strong>Edit-fallback trap</strong> — reaching for <code>sed -i</code> via Bash instead of Claude Code's documented Read+Edit/Write mechanism.</li>
+      <li><span class="chip">OVER-ENGINEERING</span> — a custom hook-and-script pipeline for something a <code>paths</code>-scoped rule file already handles.</li>
+      <li><span class="chip">WRONG PROBLEM</span> — blaming model reliability when the real issue is a CLAUDE.md context-budget problem.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference / rapid recall</div><ul><li>Memory hierarchy (narrow → broad, most-specific-wins): <code>CLAUDE.local.md</code> → project <code>CLAUDE.md</code> → user <code>~/.claude/CLAUDE.md</code> → managed/enterprise policy (mandatory floor).</li><li>CLAUDE.md and auto memory are <em>context</em>, never enforcement — use hooks to guarantee behavior.</li><li><code>PreToolUse</code> is the strongest hook — denies even under bypass-permission modes; exit code 2 stops the tool.</li><li>Hooks vs. prompts: guaranteed compliance → hook. Everything else → prompt/CLAUDE.md is fine.</li><li>SKILL.md requires only <code>name</code> + <code>description</code>; progressive disclosure loads the body on demand.</li><li>Personal vs. project scoping recurs identically across CLAUDE.md, skills, and MCP config — same pattern, three surfaces.</li><li>Signature traps: fabricated CLI/config flags, reaching for shell workarounds over native tools, blaming the model for a CLAUDE.md context-budget problem.</li></ul></div>
+</section>
+<section class="domain" id="d4">
+  <div class="domain-head">
+    <div class="domain-code">D4</div>
+    <div class="domain-title"><h2>Prompt Engineering &amp; Structured Output</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>WEIGHT</span><b>~20% · tied largest of the four</b></div><div class="spec"><span>MOCK-60</span><b>12 questions</b></div><div class="spec"><span>DRAW-18</span><b>4 questions</b></div><div class="spec"><span>BASIS</span><b>Course material — well covered</b></div></div>
+  <div class="lede">Well-covered by the original course material — the difficulty isn't the mechanics, it's that this domain is where every PROMPT-HOPE trap on the whole exam is, at bottom, applied wrong.</div>
+  <h3 class="sec">1. Core prompting techniques, ranked by typical impact</h3><div class="tbl-wrap"><table>
+    <caption>Worked example score deltas from the course material</caption>
+    <thead><tr><th>Technique</th><th>Effect</th></tr></thead>
+    <tbody><tr><td><strong>Clear and direct</strong></td><td>Action verb + explicit task + output spec, first line. 2.32 → 3.92.</td></tr><tr><td><strong>Specificity</strong> (biggest lever)</td><td>Type A = attributes (length/structure/format, use almost always). Type B = steps (complex/multi-perspective problems). 3.92 → 7.86.</td></tr><tr><td><strong>XML tags</strong></td><td>Wrap interpolated content so Claude distinguishes instruction from data — use even for short content.</td></tr><tr><td><strong>Examples</strong> (one/multi-shot)</td><td>XML-wrapped, placed after instructions, with reasoning for why the example is ideal. Best for corner cases + exact formatting.</td></tr></tbody>
+    </table></div><div class="callout"><b>Exam framing:</b> a corner case Claude keeps getting wrong despite a clear instruction almost always wants "add a one-shot example," not a more forceful rewrite or a bigger model.</div><h3 class="sec">2. Output control mechanics</h3><ul>
+      <li><span class="tag tag-cert">Cert</span> <strong>Pre-fill:</strong> seed the assistant message end (e.g. <code>```json</code>); Claude continues from that exact point.</li>
+      <li><span class="tag tag-cert">Cert</span> <strong>Stop sequences:</strong> halt generation at a string; excluded from output.</li>
+      <li><span class="tag tag-cert">Cert</span> <strong>Tool-forced output</strong> (more reliable): <code>tool_choice: {"type":"tool","name":"..."}</code>, read from <code>response.content[0].input</code>. Pre-fill for quick/simple; tool-forcing when reliability &gt; setup simplicity.</li>
+    </ul><h3 class="sec">3. System prompts, temperature, role framing</h3><p><span class="tag tag-cert">Cert</span> System prompts control <strong>how</strong> Claude responds, not <strong>what</strong>. <strong>Temperature 0</strong> = deterministic (extraction, factual). <strong>Near 1</strong> = creative (brainstorming, marketing).</p><h3 class="sec">4. Eval discipline</h3><p>Six-step loop: draft → dataset → interpolate → run → grade → iterate.</p>
+    <ul>
+      <li><strong>Code graders</strong> — deterministic (JSON parses? AST parses? regex compiles?). Score 10 or 0. Needs known expected format in advance.</li>
+      <li><strong>Model graders</strong> — a second Claude call scores the first. Ask for strengths/weaknesses/reasoning <em>and</em> score — never a bare score alone (regresses to middling).</li>
+      <li><strong>Human graders</strong> — most flexible, least scalable.</li>
+    </ul><h3 class="sec">5. Judgment layer — D4 is where PROMPT-HOPE lives</h3><p><span class="chip">PROMPT-HOPE</span> is the exam's most consistently recurring distractor, and it's fundamentally a D4 concept: a system-prompt line or few-shot example offered exactly where the stem signals the rule <strong>must always</strong> hold, needs <strong>guarantee</strong>/<strong>compliance</strong>, or has real <strong>financial/safety consequences</strong>. Cue words — "guarantee," "compliance," "never," "financial consequences" — mean the correct answer is a hook, gate, or schema, not anything living inside the prompt.</p><div class="callout"><b>Two-question filter for any D4 scenario:</b> (1) Is the failure "sometimes wrong" (prompt fix) or "must never be wrong" (not a D4 fix at all — D2/D3 territory)? (2) If it is a prompting fix, is the lever clarity, specificity, structure, or demonstration?</div><p>Secondary traps: <span class="chip">OVER-ENGINEERING</span> (fine-tuning/bigger model where a sharper prompt or one example would fix it — cue: "most effective first step"), <span class="chip">DISPROPORTIONATE</span> (rejecting an entire output class, or exhaustive constraint lists instead of a second targeted rewrite pass — the chaining-workflow lesson).</p><div class="qref"><div class="qref-h">Quick-reference / rapid recall</div><ul><li>Impact order: clear-and-direct → specificity (biggest lever) → XML structure → examples.</li><li>Type A guidelines (attributes) almost always; Type B (steps) for complex multi-perspective problems.</li><li>Pre-fill + stop sequence = fast structured output; <code>tool_choice</code> forcing = reliable structured output.</li><li>System prompt = how, not what. Temperature 0 = deterministic/extraction; near 1 = creative.</li><li>Eval loop: draft → dataset → run → grade → iterate. Code graders need known format; model graders need reasoning-plus-score.</li><li>The domain's core exam lesson: know when the fix stops being a prompting fix at all. "Must always / guarantee / compliance / financial consequences" → the answer lives outside the prompt.</li><li>Constraint-heavy prompts Claude keeps partially violating → a second targeted rewrite pass (chaining), not a longer single prompt.</li></ul></div>
+</section>
+<section class="domain" id="d5">
+  <div class="domain-head">
+    <div class="domain-code">D5</div>
+    <div class="domain-title"><h2>Context Management &amp; Reliability</h2></div>
+  </div>
+  <div class="spec-strip"><div class="spec"><span>WEIGHT</span><b>~15% · smallest domain</b></div><div class="spec"><span>MOCK-60</span><b>9 questions</b></div><div class="spec"><span>DRAW-18</span><b>2 questions</b></div><div class="spec"><span>BASIS</span><b>Course material + gap-filled docs</b></div></div>
+  <div class="lede">Smallest domain by question count, but your <strong>second-weakest</strong> in the prior mock diagnostic — with the fewest questions, each miss costs proportionally more.</div>
+  <div class="callout harden"><b>Hardening note (post red-team):</b> the Batches API facts (§3) are docs-grounded and solid. The exact auto-compaction trigger threshold (§1) came from community reporting that conflicts across sources (85–95% depending on version/date) — don't memorize a specific percentage, lean on the mechanism instead. If a question forces a specific number, it's testing the mechanism, not asking for a percentage this file can verify with certainty.</div><h3 class="sec">1. Context compaction</h3><p><span class="tag tag-likely">Likely</span> As a session grows, quality degrades before you hit a hard token ceiling ("context rot"). <strong>Compaction</strong> summarizes older content to free room while preserving what's needed.</p><ul>
+      <li><strong>Auto-compaction</strong> triggers automatically as context approaches the limit.</li>
+      <li><strong>Manual <code>/compact [instructions]</code></strong> — deliberate, optionally focused, can run proactively at a clean breakpoint.</li>
+      <li><strong><code>PreCompact</code>/<code>PostCompact</code> hooks</strong> bracket the event; PostCompact receives the generated summary.</li>
+      <li><strong>Cannot be fully disabled</strong> — you steer <em>what</em> survives and <em>when</em> it fires, not whether it happens at all.</li>
+      <li><code>/clear</code> wipes with <strong>no</strong> summarization — different from compaction, which preserves a lossy summary.</li>
+      <li><strong>Session forking</strong> (<code>--fork-session</code>/<code>/branch</code>) copies history into a new session, leaves the original intact.</li>
+    </ul><p><span class="tag tag-cert">Cert</span> <strong>Server-side/API compaction</strong> is distinct: a beta strategy (<code>context_management.edits</code>) in the Messages API itself, triggered by an input-token threshold, wraps a summary in a <code>&lt;summary&gt;</code> block.</p><div class="callout"><b>Reliability implication — the D5 judgment core:</b> if Claude "forgets" an early instruction mid-session, it very likely only ever existed in conversation history and got summarized away at a compaction boundary. The fix is moving the constraint into a durable, always-reloaded surface (CLAUDE.md, a hook), not "reminding Claude more."</div><h3 class="sec">2. Prompt caching</h3><ul>
+      <li><span class="tag tag-cert">Cert</span> Max <strong>1 hour</strong>. Fixed order: <strong>tools → system prompt → messages</strong>. Any change before a breakpoint invalidates the cache from that point forward.</li>
+      <li>Up to <strong>4 breakpoints</strong>; layered caching allows partial hits.</li>
+      <li><strong>Minimum 1024 tokens</strong> to be cache-eligible.</li>
+      <li><strong>Longhand content-block form required</strong> — a plain string can't carry <code>cache_control</code>.</li>
+      <li><code>cache_creation_input_tokens</code> (written) vs. <code>cache_read_input_tokens</code> (served from cache).</li>
+    </ul><h3 class="sec">3. Message Batches API — the domain's hardest fact cluster</h3><ul>
+      <li><span class="tag tag-cert">Cert</span> Cap: <strong>100,000 requests or 256 MB</strong>, whichever first.</li>
+      <li>Results within <strong>24 hours</strong>, or the batch expires. Downloadable for <strong>29 days</strong>.</li>
+      <li><strong>50% cost discount</strong> vs. synchronous, on input/output/cache tokens alike.</li>
+      <li>No minimum-latency SLA — anywhere up to the 24-hour outer bound.</li>
+      <li><strong>Cannot be modified after submission</strong>; streaming not supported.</li>
+      <li>Tool use <strong>is</strong> supported inside a batch request — the real constraint is narrower: a batch <strong>cannot execute an iterative, multi-turn agentic tool loop.</strong> Each batch request produces exactly one response.</li>
+    </ul><div class="callout"><b>The trap:</b> a scenario framing this as a speed problem is testing whether you fall for the more obvious-sounding but wrong explanation. It's architectural, not latency.</div><h3 class="sec">4. RAG — context management for external knowledge</h3><p><span class="tag tag-guess">Guess</span> 7-step pipeline: chunk → embed → normalize → vector DB → embed query → similarity search → assemble prompt. <strong>Cosine similarity</strong> (closer to 1 = more similar) vs. <strong>cosine distance</strong> (closer to 0 = more similar) — inverses, classic mix-up trap.</p>
+    <p>Chunking: size-based (simple, needs overlap) · structure-based (best with reliable markdown/HTML structure) · semantic-based (most accurate, most complex). <strong>Hybrid search</strong> = vector + BM25, merged via Reciprocal Rank Fusion. <strong>Reranking</strong> = extra LLM pass after retrieval, worth it when retrieval nearly-but-not-quite captures intent. <strong>Contextual retrieval</strong> = prepend an LLM-generated situating blurb before embedding each chunk.</p><h3 class="sec">5. Reliability, more broadly</h3><p><span class="tag tag-cert">Cert</span> <strong>Citations:</strong> <code>citations: {enabled: true}</code> + source title — verifiability, not blind trust. <strong>Extended thinking:</strong> use after prompt engineering has failed to hit target accuracy, confirmed via evals — not a first resort.</p><h3 class="sec">Judgment layer — traps specific to this domain</h3><ul>
+      <li><span class="chip">SILENT SUPPRESSION</span> — D5's signature trap: empty-as-success, discarding a conflicting value, hiding a failure. Never correct in a reliability-framed scenario.</li>
+      <li><span class="chip">HEURISTIC GUESS</span> — picking the most recent/prestigious value or averaging conflicting data. Correct move: ask for identifiers, or keep both annotated with source.</li>
+      <li><span class="chip">DISPROPORTIONATE</span> — terminating a pipeline / reviewing 100% forever / rejecting a whole document class for a bounded problem.</li>
+      <li><span class="chip">WRONG PROBLEM</span> — framing context-loss (compaction) as a model-reliability issue rather than a context-architecture one.</li>
+    </ul><div class="qref"><div class="qref-h">Quick-reference / rapid recall</div><ul><li>Compaction preserves continuity under a shrinking budget; <code>/clear</code> wipes with no summary — pick based on continuity vs. clean slate.</li><li>Cannot fully disable compaction; steer <em>what</em> survives and <em>when</em> it fires.</li><li>Instructions living only in conversation history can be lost at a compaction boundary — durable rules belong in CLAUDE.md/hooks.</li><li>Prompt caching: 1hr max, tools→system→messages order, 4 breakpoints max, 1024-token minimum, longhand content blocks required.</li><li>Batches: 100k requests/256MB cap, 24hr window, 50% discount, cannot modify after submit, no streaming.</li><li><strong>The Batches API's real limitation is architectural (no multi-turn tool loop), not merely latency</strong> — a known trap.</li><li>Cosine similarity (higher=closer) vs. cosine distance (lower=closer) are inverses.</li><li>Data conflicts → ask or annotate-and-keep-both. Never silently pick one, average, or suppress the discrepancy.</li></ul></div>
+</section>
+      <footer class="page-end">CCA-F Domain Notes · consolidated from 5 source study files · confidence-tagged where gap-filled · pairs with usecasesnotes.html</footer>
+    </div>
+  </main>
+</div>
+<script>
+(function(){
+  var toggle=document.querySelector('.menu-toggle');
+  var sidebar=document.querySelector('.sidebar');
+  var scrim=document.querySelector('.scrim');
+  function close(){sidebar.classList.remove('open');scrim.classList.remove('show');}
+  if(toggle){toggle.addEventListener('click',function(){sidebar.classList.toggle('open');scrim.classList.toggle('show');});}
+  if(scrim){scrim.addEventListener('click',close);}
+  document.querySelectorAll('nav.toc a').forEach(function(a){a.addEventListener('click',close);});
+
+  var links=Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var sections=links.map(function(a){return document.querySelector(a.getAttribute('href'));}).filter(Boolean);
+  function onScroll(){
+    var y=window.scrollY+120;
+    var current=sections[0];
+    sections.forEach(function(s){if(s.offsetTop<=y){current=s;}});
+    links.forEach(function(a){a.classList.remove('active');});
+    if(current){
+      var match=links.find(function(a){return a.getAttribute('href')==='#'+current.id;});
+      if(match){match.classList.add('active');}
+    }
+  }
+  document.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+
+  /* theme toggle — writes the same 'ccaf-theme' key the trainer reads */
+  var tbtns=Array.prototype.slice.call(document.querySelectorAll('.themeset button'));
+  function applyTheme(m){
+    if(m==='light'){document.documentElement.setAttribute('data-theme','light');}
+    else if(m==='dark'){document.documentElement.setAttribute('data-theme','dark');}
+    else {document.documentElement.removeAttribute('data-theme');}
+    tbtns.forEach(function(b){
+      var on=b.getAttribute('data-theme-set')===m;
+      b.classList.toggle('on',on);
+      b.setAttribute('aria-pressed',on?'true':'false');
+    });
+  }
+  var tmode='system';try{tmode=localStorage.getItem('ccaf-theme')||'system';}catch(e){}
+  applyTheme(tmode);
+  tbtns.forEach(function(b){b.addEventListener('click',function(){
+    var m=b.getAttribute('data-theme-set');
+    try{localStorage.setItem('ccaf-theme',m);}catch(e){}
+    applyTheme(m);
+  });});
+})();
+</script>
+</body>
+</html>
