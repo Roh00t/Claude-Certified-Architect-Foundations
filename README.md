@@ -70,12 +70,12 @@ So I rewrote the authored questions, moving each correct answer's justification 
 | Bank | correct ÷ avg distractor | correct is longest |
 |---|---|---|
 | Scenario set (neutralised) | 1.13× | 28% |
-| **Practice set (never neutralised)** | **1.14×** | **63%** ⚠️ |
+| Practice set (60 of 160 neutralised) | 1.05× | 40% |
 | Hard mode (neutralised) | 1.07× | 33% |
 | **Focus Drill (authored under the gate)** | **1.00×** | **25%** |
 | *random chance* | *1.00×* | *25%* |
 
-**Known gap:** only **60 of the 220** judgment questions have a length-neutralised option set. The other 160 — imported practice questions — fall back to original phrasing at *every* difficulty, **including Hard**. The whole judgment bank therefore sits at **54% correct-is-longest**, not the 35% I originally reported for the smaller 108-question bank. See [Known issues](#known-issues).
+Across the **whole 220-question judgment bank**, Medium and Hard now measure **1.045× / 27% correct-is-longest** — against a 25% random baseline. On **Easy** the original phrasing is preserved deliberately (1.39× / 71%), which is what that setting is *for*: first exposure, tell intact.
 
 The Focus Drill is the only bank authored under an enforced gate from the start, and the only one at random baseline. Strategy check on it: *always pick longest* scores **19%**, *always pick shortest* **22%** — both below the 25% you'd get from guessing. No length signal left to exploit.
 
@@ -106,7 +106,7 @@ These exist because the bank drifted once already. Any question added should hol
 
 | | Issue |
 |---|---|
-| 🔴 | **160 of 220 judgment questions were never length-neutralised** — they show original phrasing even on Hard, putting the bank at 54% correct-is-longest. Fixing means authoring a neutralised option set for those 160. |
+| 🟢 | **100 of 220 judgment questions still lack a neutralised option set** — but only where the correct answer was already within 15 characters of the longest distractor, so the bank measures 27% correct-is-longest overall. Cosmetic completeness, not an exploitable tell. |
 | 🟡 | **Results timestamps render in UTC, not local** (three `toISOString()` sites in `index.html`). Cosmetic — no scoring impact — but sitting times display shifted. |
 | 🟡 | **Focus Drill trap distribution is skewed** — wrong-problem is 50% of all distractors; heuristic-guess only 5%. |
 | 🟢 | **Judgment bank skews D3 +7 points** over the 20% target. Mocks still *draw* to correct weighting, so scores aren't distorted — only free-form drilling over-exposes D3. |
